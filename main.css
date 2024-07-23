@@ -1,58 +1,18 @@
-html, body {
+body {
+    font-family: 'custom-font', Helvetica, sans-serif;
+}
+html, body, button, input {
     padding:0;
     margin:0;
-    background: #000;
-    font-family: sans-serif;
 }
 
-button {
-    background: #ff610038;
-    border: 1px solid #ff6100;
-    padding: 5px 15px;
-    color: #ff6100;
-    text-transform: uppercase;
-    font-size: 10px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.layer-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
+::placeholder {
+    color: inherit;
+    opacity: 0.5;
 }
 
 *:focus-visible {
-    outline: solid;
+    outline-style:double;
     outline-color: #ff6100;
-}
-
-.object-container {
-    color: white;
-    padding: 10px 25px;
-    border: 1px solid;
-    margin: 5px;
-    text-align: center;
-}
-
-.title-container {
-    width: 100%;
-    color: #ff6100;
-    padding: 0 20px;
-    display: flex;
-    flex-direction: row;
-    justify-content: start;
-}
-
-.type-tag {
-    font-weight: bold;
-    font-size: 10px;
-    display: block;
-}
-
-.actions-container {
-    padding: 10px 0px 0px 0px;
-    border-top: 1px solid #00d7e1;
-    margin: 10px -25px 0 -25px;
+    border: none;
 }

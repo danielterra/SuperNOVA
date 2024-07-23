@@ -1,55 +1,165 @@
-const {body} = window.document;
-const varToString = varObj => Object.keys(varObj)[0]
+// SUPER NOVA
+// This is a fast and pratical IDE and REPL for creating modeling and automation using javascript in the browser
 
-class SuperNOVA {
-    constructor (layers) {
-        this.layers = layers || []
-    }   
-    addLayer = (layer) => {
-        body.innerHTML = "";
-        this.layers.push(layer);
-        layer.render();
-    }
+// PRINCIPLES
+// 1. RADICAL SIMPLICITY
+// We aim to create this application using only vanilla javascript, no frameworks, minimal amount of css and html, this script should be 99% of the application. Like LEGO BLOCKS we should have only a few primitives that cam be composed to create more complex systems.
+
+// 2. EXPLICIT LAYERS OF ABSTRACTIONS
+// Like pages of a spreadsheet, the user should be abble to separate their entities in different layers of abstraction, the only rule is that the bottom layers does not know about upper layers, but the upper layers can acess entities in the bottom.
+
+// STYLING
+// Constants
+const COLORS = {
+    ACTION: "#ff6100",
+    ACTION_BACKGROUND: "#ff610038",
+    CONTENT: "#ffffffbf",
+    CONTENT_BACKGROUND: "#000000"
 }
 
-class Layer {
-    constructor (name, objects) {
-        this.name = name;
-        this.objects = objects || [];
-    }
-    render = () => {
-        window.document.body.innerHTML = "";
-        this.renderTitle();
-        const container = window.document.createElement("div");
-        container.className = "layer-container";
-        const title = this.renderTitle()
-        container.appendChild(title);
-        this.objects.forEach(element => {
-            const tag = element.renderThumbnail();
+// Typography
+const FONTS = {
+    STANDARD: new FontFace("custom-font", "url(/fonts/Monoid-Retina.ttf)")
+}
 
-            container.appendChild(tag);
+document.fonts.add(FONTS.STANDARD);
+
+for (const font in FONTS) {
+    FONTS[font].load();
+}
+
+// SHORTCUTS
+// This is only shortcuts for long name variables
+const body = window.document.body;
+const createTag = (name) => {
+    return window.document.createElement(name);
+}
+
+// CLASSES
+// SuperNOVA
+// This is mostly a static class to handle the layer 0 of abstraction
+class SN {
+    static layers = [];
+    static entities = [];
+
+    static dbOpenRequest = window.indexedDB.open("supernova", 4);
+    static db; // Opened IndexedDB instance
+    static entityStore; // IndexedDB entity object store
+    
+
+    static {
+        this.dbOpenRequest.onerror = (err) => {
+            alert(err.target.error.message);
+            console.error(err);
+        }
+        this.dbOpenRequest.onupgradeneeded = () => this.setupDb();
+        this.dbOpenRequest.onsuccess = () => this.dbReady();
+    }
+
+    static isInstalled () {
+        return window.chrome.app.isInstalled;
+    }
+
+    static getPerformance () {
+        return window.chrome.loadTimes();
+    }
+
+    static find (e) {
+        console.log(e);
+        if (e.key !== "Enter") {
+            return;
+        }
+        const term = e.srcElement.value;
+        console.log(term);
+        window.find(term, false, false, true, false, true, true)
+    }
+
+    static addLayer (layer) {
+        this.layers.push(layer);
+        // TBD: Save to local storage
+        layer.render();
+    }
+
+    static addEntity (name, states, attrs) {
+        this.entityStore.put({
+            type: "entity", 
+            name,
+            states,
+            attrs
         });
+        // Load entities again
+    }
 
-        body.appendChild(container);
-    };
-    renderTitle = () => {
-        const container = window.document.createElement("div");
-        container.className = "title-container";
+    static render () {
+        // Clear entire body
+        body.innerHTML = "";
+        body.style.fontFamily = FONTS.STANDARD.family;
+        body.style.backgroundColor = COLORS.CONTENT_BACKGROUND;
+        body.style.color = COLORS.CONTENT;
+        
+        const searchInput = createTag("input");
+        searchInput.style.backgroundColor = COLORS.ACTION_BACKGROUND;
+        searchInput.style.color = COLORS.ACTION;
+        searchInput.style.padding = "5px 10px";
+        searchInput.style.border = "1px solid";
+        searchInput.style.flexGrow = "1";
+        searchInput.style.margin = "0 0 0 20px";
+        searchInput.style.fontVariantLigatures = "common-ligatures no-discretionary-ligatures historical-ligatures contextual";
+        searchInput.onkeydown = this.find;
+        searchInput.type = "text";
+        searchInput.placeholder = "Digite e pressione enter para pesquisar";
 
-        const title = window.document.createElement("h1");
-        title.innerText = this.name;
-
+        const title = createTag("h1");
+        title.innerText = "SuperNOVA";
+        
+        const container = createTag("div");
+        container.style.margin = "15px 30px";
+        container.style.display = "flex";
+        container.style.flexDirection = "row";
+        container.style.alignItems = "center";
+        container.style.justifyContent = "space-between";
         container.appendChild(title);
-        return container;
+        container.appendChild(searchInput);
+        
+        body.appendChild(container);
     }
-    addObj = (obj) => {
-        this.objects.push(obj);
-        this.render()
+
+    static broadcastMessage (message) {
+        this.entities.forEach(entity => {
+            entity.receiveMessage(message)
+        });
     }
-    addObjs = (objs) => {
-        objs.forEach(obj => {
-            this.addObj(obj)
-        })
+
+    static setupDb () {
+        console.log("UPGRADE NEEDED");
+        this.db = this.dbOpenRequest.result;
+        const store = this.db.createObjectStore("entity", {
+            keyPath: "name"
+        });
+        
+        // Indexes
+        store.createIndex("names", ["name"], {
+            unique: true
+        });
+    }
+
+    static dbReady () {
+        console.log("DB IS READY", this);
+        this.db = this.dbOpenRequest.result;
+        const transaction = this.db.transaction("entity", "readwrite");
+
+        this.entityStore = transaction.objectStore("entity");
+        console.log(this.entityStore);
+        this.entityNameIndex = this.entityStore.index("names");
+        this.loadEntities();
+    }
+
+    static loadEntities () {
+        this.entityStore.load()
+            .then((response) => {
+                this.entities = response;
+                console.log(this.entities);
+            })
     }
 }
 
@@ -59,45 +169,68 @@ class Entity {
         this.name = name;
         this.states = states || [];
         this.attrs = attrs;
+        this.save();
     }
+
+    renderThumbnail = () => {
+        const container = createTag("div");
+        container.className = "entity-container";
+        container.style.color = "white";
+        container.style.padding = "10px 25px";
+        container.style.border = "1px solid";
+        container.style.margin = "5px";
+        container.style.textAlign = "center";
+        // TBD: Add a nice border to indicate what is being focused
+
+        const label = createTag("span");
+        label.innerText = `${this.name} | ${this.type}`;
+
+        container.appendChild(label);
+        return container;
+    }
+
+    receiveMessage = (message) => {
+        // check states and try to execute the action for the message received
+    }
+
+    save = () => {
+        // Save to indexedDB
+    }
+
+    addState = (name, description) => {
+        this.states.push(new State(name, description))
+    }
+
+    addRow = (attrs) => {
+        // validate attrs
+        // save to IndexedDB table
+    }
+
+    search = (attrs) => {
+        // Search by attrs
+        // Return entities with attrs
+    }
+
 }
 
 class State {
-    constructor(name, description) {
+    constructor(name, description, actions) {
         this.name = name;
         this.description = description;
+        this.actions = actions;
+        // Save to indexDB
     }
-}
 
-class Collection {
-    constructor(type, name) {
-        this.type = `${type} collection`;
-        this.name = name;
-        this.items = [];
-        this.actions = [
-            new Action("button", "Abrir", this.renderContainer)
-        ]
-    }
-    addItem = (item) => {
-        this.items.push(item)
-    }
     renderThumbnail = () => {
-        const tag = window.document.createElement("div");
-        const type_tag = window.document.createElement("span");
+        const tag = createTag("div");
+        tag.className = "state-container";
 
-        tag.innerHTML = this.name;
-        tag.className = `object-container`;
+        const label = createTag("span");
+        label.innerText = `${this.name}`;
+        label.style.display = "block";
+
+        tag.appendChild(label);
         
-        type_tag.innerHTML = this.type.toUpperCase()
-        type_tag.className = "type-tag"
-        
-        tag.style.color = "#00d7e1";
-        tag.style.backgroundColor = "#00d7e112";
-        tag.appendChild(type_tag);
-
-        const actions_container = window.document.createElement("div");
-        actions_container.className = "actions-container";
-
         this.actions.map(ac => {
             const action_button = ac.render();
             actions_container.appendChild(action_button);
@@ -109,11 +242,6 @@ class Collection {
 
         return tag;
     }
-    renderContainer = () => {
-        const container = window.document.createElement("div");
-        container.classname = "collection-container";
-        return container;
-    }
 }
 
 class Action {
@@ -124,21 +252,21 @@ class Action {
         this.func = func;
     }
     render = () => {
-        const action_button = window.document.createElement("button");
+        const action_button = createTag("button");
         action_button.innerText = this.name;
         action_button.onclick = this.func;
         return action_button;
     }
 }
 
-window.onload = function coldStart() {
-    const layer_zero = new Layer("LAYER ZERO");
-    layer_zero.addObjs(
-        [
-            new Collection("person", "People")
-        ]
-    )
+class Message {
+    constructor(senderRef, actionName, data) {
+        this.senderRef = senderRef;
+        this.actionName = actionName;
+        this.data = data;
+    }
+}
 
-    window.superNOVA = new SuperNOVA();
-    window.superNOVA.addLayer(layer_zero);
+window.onload = function coldStart() {
+    SN.render();
 }
