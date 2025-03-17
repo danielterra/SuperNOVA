@@ -1,3 +1,6 @@
+import * as db from '/dataStorage.js';
+import * as utils from '/utils.js';
+
 // SUPER NOVA
 // This is a fast and pratical IDE and REPL for creating modeling and automation using javascript in the browser
 
@@ -8,8 +11,10 @@
 // 2. EXPLICIT LAYERS OF ABSTRACTIONS
 // Like pages of a spreadsheet, the user should be abble to separate their entities in different layers of abstraction, the only rule is that the bottom layers does not know about upper layers, but the upper layers can acess entities in the bottom.
 
+
+// CONSTANTS
+
 // STYLING
-// Constants
 const COLORS = {
     ACTION: "#ff6100",
     ACTION_BACKGROUND: "#ff610038",
@@ -17,7 +22,7 @@ const COLORS = {
     CONTENT_BACKGROUND: "#000000"
 }
 
-// Typography
+// TYPOGRAPHY
 const FONTS = {
     STANDARD: new FontFace("custom-font", "url(/fonts/Monoid-Retina.ttf)")
 }
@@ -35,26 +40,9 @@ const createTag = (name) => {
     return window.document.createElement(name);
 }
 
-// CLASSES
-// SuperNOVA
-// This is mostly a static class to handle the layer 0 of abstraction
 class SN {
     static layers = [];
     static entities = [];
-
-    static dbOpenRequest = window.indexedDB.open("supernova", 4);
-    static db; // Opened IndexedDB instance
-    static entityStore; // IndexedDB entity object store
-    
-
-    static {
-        this.dbOpenRequest.onerror = (err) => {
-            alert(err.target.error.message);
-            console.error(err);
-        }
-        this.dbOpenRequest.onupgradeneeded = () => this.setupDb();
-        this.dbOpenRequest.onsuccess = () => this.dbReady();
-    }
 
     static isInstalled () {
         return window.chrome.app.isInstalled;
@@ -65,29 +53,11 @@ class SN {
     }
 
     static find (e) {
-        console.log(e);
         if (e.key !== "Enter") {
             return;
         }
         const term = e.srcElement.value;
-        console.log(term);
         window.find(term, false, false, true, false, true, true)
-    }
-
-    static addLayer (layer) {
-        this.layers.push(layer);
-        // TBD: Save to local storage
-        layer.render();
-    }
-
-    static addEntity (name, states, attrs) {
-        this.entityStore.put({
-            type: "entity", 
-            name,
-            states,
-            attrs
-        });
-        // Load entities again
     }
 
     static render () {
@@ -110,7 +80,7 @@ class SN {
         searchInput.placeholder = "Digite e pressione enter para pesquisar";
 
         const title = createTag("h1");
-        title.innerText = "SuperNOVA";
+        title.innerText = "SUPERNOVA";
         
         const container = createTag("div");
         container.style.margin = "15px 30px";
@@ -120,153 +90,79 @@ class SN {
         container.style.justifyContent = "space-between";
         container.appendChild(title);
         container.appendChild(searchInput);
-        
+
         body.appendChild(container);
-    }
-
-    static broadcastMessage (message) {
-        this.entities.forEach(entity => {
-            entity.receiveMessage(message)
-        });
-    }
-
-    static setupDb () {
-        console.log("UPGRADE NEEDED");
-        this.db = this.dbOpenRequest.result;
-        const store = this.db.createObjectStore("entity", {
-            keyPath: "name"
-        });
         
-        // Indexes
-        store.createIndex("names", ["name"], {
-            unique: true
+        this.layers.forEach(layer => {
+            const layerTag = layer.render();
+            body.appendChild(layerTag);
         });
     }
-
-    static dbReady () {
-        console.log("DB IS READY", this);
-        this.db = this.dbOpenRequest.result;
-        const transaction = this.db.transaction("entity", "readwrite");
-
-        this.entityStore = transaction.objectStore("entity");
-        console.log(this.entityStore);
-        this.entityNameIndex = this.entityStore.index("names");
-        this.loadEntities();
-    }
-
-    static loadEntities () {
-        this.entityStore.load()
-            .then((response) => {
-                this.entities = response;
-                console.log(this.entities);
-            })
-    }
 }
 
-class Entity {
-    constructor(type, name, states, attrs){
-        this.type = type;
-        this.name = name;
-        this.states = states || [];
-        this.attrs = attrs;
-        this.save();
-    }
+async function coldStart() {
+    await db.addFacts(
+        [
+            {
+                entity: ":user/name",
+                attribute: ":db/ident",
+                value: ":user/name"
+            },
+            {
+                entity: ":user/name",
+                attribute: ":db/valueType",
+                value: ":db.type/string"
+            },
+            {
+                entity: ":user/name",
+                attribute: ":db/label",
+                value: "Nome"
+            },
+            {
+                entity: ":user/birthday",
+                attribute: ":db/ident",
+                value: ":user/birthday"
+            },
+            {
+                entity: ":user/birthday",
+                attribute: ":db/label",
+                value: "Aniversário"
+            },
+            {
+                entity: ":user/lastSeen",
+                attribute: ":db/ident",
+                value: ":user/lastSeen"
+            },
+            {
+                entity: ":user/lastSeen",
+                attribute: ":db/label",
+                value: "Visto por último"
+            },
+            {
+                entity: ":user/1",
+                attribute: ":user/name",
+                value: "Daniel Terra"
+            },
+            {
+                entity: ":user/1",
+                attribute: ":user/birthday",
+                value: 593661600000
+            },
+            {
+                entity: ":user/1",
+                attribute: ":user/lastSeen",
+                value: new Date().valueOf()
+            }
+        ]
+    );
 
-    renderThumbnail = () => {
-        const container = createTag("div");
-        container.className = "entity-container";
-        container.style.color = "white";
-        container.style.padding = "10px 25px";
-        container.style.border = "1px solid";
-        container.style.margin = "5px";
-        container.style.textAlign = "center";
-        // TBD: Add a nice border to indicate what is being focused
+    await utils.logTimeDiff("user schema", db.getSchemaByEntity(":user"));
 
-        const label = createTag("span");
-        label.innerText = `${this.name} | ${this.type}`;
-
-        container.appendChild(label);
-        return container;
-    }
-
-    receiveMessage = (message) => {
-        // check states and try to execute the action for the message received
-    }
-
-    save = () => {
-        // Save to indexedDB
-    }
-
-    addState = (name, description) => {
-        this.states.push(new State(name, description))
-    }
-
-    addRow = (attrs) => {
-        // validate attrs
-        // save to IndexedDB table
-    }
-
-    search = (attrs) => {
-        // Search by attrs
-        // Return entities with attrs
-    }
-
+    // console.log(":user", await db.getLatestFactsByEntity(":user"));
+    await utils.logTimeDiff(":user/1", db.getLatestFactsByEntity(":user/1"));
+    await utils.logTimeDiff("Remove lastSeen do :user/1", db.removeFact(":user/1",":user/lastSeen"));
+    await utils.logTimeDiff("Remove lastSeen do :user/1", db.getLatestFactByEntityAndAttribute(":user/1",":user/lastSeen"));
+    await utils.logTimeDiff(":user/1 após remoção", db.getLatestFactsByEntity(":user/1"));
 }
 
-class State {
-    constructor(name, description, actions) {
-        this.name = name;
-        this.description = description;
-        this.actions = actions;
-        // Save to indexDB
-    }
-
-    renderThumbnail = () => {
-        const tag = createTag("div");
-        tag.className = "state-container";
-
-        const label = createTag("span");
-        label.innerText = `${this.name}`;
-        label.style.display = "block";
-
-        tag.appendChild(label);
-        
-        this.actions.map(ac => {
-            const action_button = ac.render();
-            actions_container.appendChild(action_button);
-        });
-
-        if (actions_container.childNodes.length > 0) {
-            tag.appendChild(actions_container);
-        }
-
-        return tag;
-    }
-}
-
-class Action {
-    constructor(mode, name, func) {
-        this.type = "action",
-        this.mode = mode;
-        this.name = name;
-        this.func = func;
-    }
-    render = () => {
-        const action_button = createTag("button");
-        action_button.innerText = this.name;
-        action_button.onclick = this.func;
-        return action_button;
-    }
-}
-
-class Message {
-    constructor(senderRef, actionName, data) {
-        this.senderRef = senderRef;
-        this.actionName = actionName;
-        this.data = data;
-    }
-}
-
-window.onload = function coldStart() {
-    SN.render();
-}
+db.init(coldStart);
