@@ -28,17 +28,23 @@ const handleDBUpgradeNeeded = () => {
             store.createIndex("factsByEntityAndAttribute", ["entity", "attribute", "time"], { unique: false });
         }
 
+        if (!store.indexNames.contains("factsByAttribute")) {
+            store.createIndex("factsByAttribute", "attribute", { unique: false });
+        }
     }
 }
 
-export const init = (onsuccess) => {
-    DB_OPEN_REQUEST.onerror = (err) => {
-        alert(err.target.error.message);
-        console.error(err);
-    }
-    
-    DB_OPEN_REQUEST.onupgradeneeded = () => handleDBUpgradeNeeded();
-    DB_OPEN_REQUEST.onsuccess = onsuccess;
+export const init = async () => {
+    return new Promise((resolve, reject) => {
+        DB_OPEN_REQUEST.onerror = (err) => {
+            alert(err.target.error.message);
+            console.error(err);
+        }
+        
+        DB_OPEN_REQUEST.onupgradeneeded = () => handleDBUpgradeNeeded();
+        DB_OPEN_REQUEST.onsuccess = resolve;
+        DB_OPEN_REQUEST.onerror = reject;
+    });
 }
 
 export const addFact = async (entity, attribute, value, time) => {
@@ -228,5 +234,37 @@ export const removeFact = async (entity, attribute) => {
 
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
+    });
+};
+
+export const getLatestFactsByAttribute = async (attribute) => {
+    return new Promise((resolve, reject) => {
+        const db = DB_OPEN_REQUEST.result;
+        const transaction = db.transaction("facts", "readonly");
+        const store = transaction.objectStore("facts");
+        const index = store.index("factsByAttribute");
+
+        const range = IDBKeyRange.only(attribute); // Filtra pelo atributo
+        const cursorRequest = index.openCursor(range, "prev"); // Ordenação reversa (últimos fatos primeiro)
+
+        const latestFacts = [];
+        const seenEntities = new Set(); // Rastreamos entidades já adicionadas
+
+        cursorRequest.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (!cursor) {
+                return resolve(latestFacts); // Retorna os fatos mais recentes
+            }
+
+            const fact = cursor.value;
+            if (!seenEntities.has(fact.entity)) {
+                latestFacts.push(fact);
+                seenEntities.add(fact.entity); // Marca a entidade como processada
+            }
+
+            cursor.continue(); // Continua percorrendo os fatos
+        };
+
+        cursorRequest.onerror = () => reject(cursorRequest.error);
     });
 };

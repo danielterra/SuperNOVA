@@ -5,3 +5,7 @@ export const logTimeDiff = (label, promise) => {
         return r;
     });
 }
+
+export const createTag = (name) => {
+    return window.document.createElement(name);
+}
