@@ -1,15 +1,24 @@
 {
-  "name": "supernova",
-  "version": "1.0.0",
-  "main": "main.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": ". serve.sh"
+    "dev": "vite"
   },
-  "author": "danielterra",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "http-server": "^14.1.1"
+    "@supabase/supabase-js": "^2.39.7",
+    "date-fns": "^3.3.1",
+    "gpt-tokenizer": "^2.1.2",
+    "lucide-react": "^0.344.0",
+    "openai": "^4.28.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^9.0.1",
+    "vite": "^5.0.12",
+    "@vitejs/plugin-react": "^4.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.10",
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.35",
+    "autoprefixer": "^10.4.17"
   }
 }
