@@ -20,11 +20,11 @@ export function Sidebar({
   isDisabled 
 }: SidebarProps) {
   return (
-    <div className="w-64 bg-white border-r flex flex-col h-full">
+  <div className="w-64 bg-gray-900 border-r border-gray-700 text-white flex flex-col h-full">
       <div className="p-4">
         <button
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700 transition-colors disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-md py-2 hover:bg-orange-600 transition-colors disabled:opacity-50"
           disabled={isDisabled}
         >
           <MessageCircle className="w-4 h-4" />
@@ -40,14 +40,14 @@ export function Sidebar({
       <div className="mt-auto border-t p-4 space-y-2">
         <button
           onClick={onToggleSettings}
-          className="w-full flex items-center gap-2 text-gray-600 text-sm hover:text-gray-900"
+          className="w-full flex items-center gap-2 text-white text-sm hover:text-orange-500"
         >
           <Settings className="w-4 h-4" />
           Settings
         </button>
         <button
           onClick={() => supabase.auth.signOut()}
-          className="w-full text-gray-600 text-sm hover:text-gray-900"
+          className="w-full text-white text-sm hover:text-orange-500"
         >
           Sign Out
         </button>

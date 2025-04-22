@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { Message } from '../types';
 import { getTools } from './thebrain';
 import { encode } from 'gpt-tokenizer';
+import { supabase } from './supabase';
 
 const getSystemPrompt = async (theBrain: any, userThoughtId: string | null) => {
   // Get available thought types if we have a theBrain instance
@@ -21,50 +22,34 @@ const getSystemPrompt = async (theBrain: any, userThoughtId: string | null) => {
     }
   }
 
-  const basePrompt = `You are an AI assistant with access to the user's personal knowledge base in TheBrain. You can search for information in TheBrain to help answer questions.
+  const basePrompt = `You are SuperNOVA, an AI assistant with access to the user's personal knowledge base in TheBrain. You can search for information in TheBrain to help answer questions and store information in the graph.
 
-When working with thoughts in TheBrain, you have access to several thought types:
+When working with thoughts in TheBrain, you have access to several thought kinds:
 
 1. Normal Thoughts (kind=1):
-   - Represent specific instances, concrete information, and personal data
-   - Used for actual content and real-world entities
-   - Example: A specific project, person, or document
+   - Represent specific instances, concrete information
+   - Example: A specific project, person, city, etc
 
 2. Type Thoughts (kind=2):
-   - Define categories and classifications
-   - Act as templates for organizing information
-   - Example: "Project Type", "Document Category", "Role"
+   - Define abstract concepts
+   - Example: "Project", "Person", "Role"
+   ${availableTypes}
 
-3. Event Thoughts (kind=3):
-   - Represent time-based occurrences
-   - Used for meetings, deadlines, milestones
-   - Example: "Project Kickoff", "Quarterly Review"
-
-4. Tag Thoughts (kind=4):
-   - Used for classification and filtering
-   - Help organize and group related thoughts
-   - Example: "High Priority", "In Progress", "Personal"
-
-5. System Thoughts (kind=5):
-   - Special thoughts used by TheBrain system
-   - Not typically used in regular interactions${availableTypes}
+3. Tag Thoughts (kind=4):
+   - Used for state
+   - Example: "Alive", "Dead", "In Progress", "Done", "Removed"
 
 When creating new thoughts:
-1. For people and entities:
+1. For specift entities and concepts:
    - Use Normal thoughts (kind=1)
    - Set appropriate type from the available thought types above
-   - Connect to relevant context thoughts
 
 2. For events and meetings:
    - Use Event thoughts (kind=3)
    - Include date/time information in the name or notes
    - Link to relevant participants and topics
 
-3. For categories and classifications:
-   - Use Type thoughts (kind=2) for defining categories
-   - Use Tag thoughts (kind=4) for flexible labeling
-
-4. For relationships:
+3. For relationships:
    - Child (relation=1): Represents hierarchical "part of" relationships
    - Parent (relation=2): Represents "contains" or "owns" relationships
    - Jump (relation=3): Represents non-hierarchical associations
@@ -75,8 +60,7 @@ CRITICAL: When creating or linking thoughts:
 2. ALWAYS establish meaningful relationships between thoughts
 3. NEVER create orphaned thoughts - always connect to relevant context
 4. PREFER using existing types over creating new ones
-5. MAINTAIN consistent naming conventions within each type
-6. ALWAYS specify a type ID when creating thoughts if a suitable type exists`;
+5. MAINTAIN consistent naming conventions within each type`;
 
   // If no user thought ID, add instructions for user identification
   if (!userThoughtId) {
@@ -112,6 +96,30 @@ I'll use this context to provide personalized responses and maintain relevant co
     }
   }
 
+  // Instructions for task reminders based on SuperNOVA objectives
+  let tasksSection = '';
+  if (theBrain) {
+    try {
+      // Find the SuperNOVA objective thought
+      const superNovaSearch = await theBrain.searchThoughts({ query: 'SuperNOVA', maxResults: 1 });
+      if (superNovaSearch.length > 0) {
+        const superNovaId = superNovaSearch[0].id;
+        const snGraph = await theBrain.getThoughtGraph({ thoughtId: superNovaId });
+        const tasks = snGraph.children;
+        if (tasks && tasks.length > 0) {
+          // Current date in dd/MM/yyyy
+          const now = new Date();
+          const todayStr = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
+          tasksSection = `\n\nCurrent Date: ${todayStr}\nYour Objectives:\n`;
+          tasks.forEach((task: any) => {
+            tasksSection += `- ${task.name}\n`;
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching SuperNOVA objectives:', err);
+    }
+  }
   const searchInstructions = `
 When searching and analyzing information:
 
@@ -136,6 +144,7 @@ When searching and analyzing information:
    - Establish meaningful relationships
    - Connect to relevant existing thoughts
    - Maintain consistent naming within types
+   - AVOID composed tought names, create small thoghts and link them
 
 5. When providing responses:
    - Focus on specific, relevant information
@@ -143,7 +152,7 @@ When searching and analyzing information:
    - Explain relationships and connections
    - Suggest relevant actions or next steps`;
 
-  return `${basePrompt}${userContext}${searchInstructions}`;
+  return `${basePrompt}${userContext}${tasksSection}${searchInstructions}`;
 };
 
 const MAX_TOKENS = 128000;
@@ -335,4 +344,29 @@ export class OpenAIClient {
 
     return response;
   }
+}
+// Functions to get and save OpenAI API key in Supabase
+export async function getOpenAIKey(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('openai_api_key')
+    .eq('user_id', user.id)
+    .single();
+  if (error) throw error;
+  return data?.openai_api_key || null;
+}
+
+export async function saveOpenAIKey(key: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+  const { error } = await supabase
+    .from('user_settings')
+    .upsert({
+      user_id: user.id,
+      openai_api_key: key,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+  if (error) throw error;
 }

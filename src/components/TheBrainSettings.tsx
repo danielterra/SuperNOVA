@@ -133,19 +133,19 @@ export function TheBrainSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="bg-gray-800 p-8 border border-gray-700 rounded-md shadow-md flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4">TheBrain Settings</h2>
+    <div className="bg-gray-800 p-6 border border-gray-700 rounded-md shadow-md">
+      <h2 className="text-xl font-semibold mb-4 text-white">TheBrain Settings</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="apiKey" className="block text-sm font-medium text-white">
             API Key
           </label>
           <input
@@ -153,17 +153,17 @@ export function TheBrainSettings() {
             id="apiKey"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm focus:border-orange-500 focus:ring-orange-500"
             placeholder="Enter your TheBrain API key"
             required
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-400">
             Get your API key from{' '}
-            <a 
-              href="https://app.thebrain.com/api-keys" 
-              target="_blank" 
+            <a
+              href="https://app.thebrain.com/api-keys"
+              target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-orange-500 hover:text-orange-700"
             >
               TheBrain Dashboard
             </a>
@@ -172,14 +172,14 @@ export function TheBrainSettings() {
 
         {brains.length > 0 && (
           <div>
-            <label htmlFor="brainSelect" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="brainSelect" className="block text-sm font-medium text-white">
               Select Brain
             </label>
             <select
               id="brainSelect"
               value={selectedBrainId}
               onChange={(e) => handleBrainSelect(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm focus:border-orange-500 focus:ring-orange-500"
             >
               <option value="">Select a brain</option>
               {brains.map((brain) => (
@@ -192,17 +192,17 @@ export function TheBrainSettings() {
         )}
 
         {error && (
-          <div className="whitespace-pre-line text-red-600 text-sm">{error}</div>
+          <div className="whitespace-pre-line text-red-400 text-sm">{error}</div>
         )}
 
         {successMessage && (
-          <div className="text-green-600 text-sm">{successMessage}</div>
+          <div className="text-green-400 text-sm">{successMessage}</div>
         )}
 
         <button
           type="submit"
           disabled={isSaving}
-          className="w-full bg-blue-600 text-white rounded-md py-2 hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="w-full bg-orange-500 text-white rounded-md py-2 hover:bg-orange-600 transition-colors disabled:opacity-50"
         >
           {isSaving ? 'Saving...' : 'Save Settings'}
         </button>

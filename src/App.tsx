@@ -3,12 +3,15 @@ import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { Message, ChatSession } from './types';
 import { AuthForm } from './components/AuthForm';
-import { Sidebar } from './components/Sidebar';
+// Sidebar removed: chat session selection is automatic
 import { ConfigurationRequired } from './components/ConfigurationRequired';
 import { ChatInterface } from './components/ChatInterface';
+import { CommandBar } from './components/CommandBar';
+import type { Command } from './components/CommandBar';
 import { Settings } from './components/Settings';
 import { sendMessage } from './lib/chat';
-import { saveUserThoughtId } from './lib/thebrain';
+import { Plex } from './components/Plex';
+import { getUserThoughtId } from './lib/thebrain';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,11 +22,64 @@ function App() {
   const [currentChatSession, setCurrentChatSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  // Close settings on ESC key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSettings(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+  // Open settings on Ctrl+S (or Cmd+S)
+  useEffect(() => {
+    const handleSaveShortcut = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setShowSettings(true);
+      }
+    };
+    window.addEventListener('keydown', handleSaveShortcut);
+    return () => window.removeEventListener('keydown', handleSaveShortcut);
+  }, []);
+  // Create new chat session on Ctrl+N (or Cmd+N)
+  useEffect(() => {
+    const handleNewChatShortcut = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        try {
+          const newSession = await createNewChatSession();
+          if (newSession) {
+            setCurrentChatSession(newSession);
+            setMessages([]);
+          }
+        } catch (err) {
+          console.error('Error creating new chat session via shortcut:', err);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleNewChatShortcut);
+    return () => window.removeEventListener('keydown', handleNewChatShortcut);
+  }, [session]);
+  // Open settings on '?' key when input not focused
+  useEffect(() => {
+    const handleQuestionShortcut = (e: KeyboardEvent) => {
+      if (e.key === '?' && document.activeElement?.id !== 'chat-input') {
+        e.preventDefault();
+        setShowSettings(true);
+      }
+    };
+    window.addEventListener('keydown', handleQuestionShortcut);
+    return () => window.removeEventListener('keydown', handleQuestionShortcut);
+  }, []);
   const [openAIKey, setOpenAIKey] = useState<string | null>(null);
   const [theBrainApiKey, setTheBrainApiKey] = useState<string | null>(null);
   const [brainId, setBrainId] = useState<string | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsRetryCount, setSettingsRetryCount] = useState(0);
+  // Selected thought for PLEX view
+  const [selectedThoughtId, setSelectedThoughtId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -45,6 +101,34 @@ function App() {
     }
   }, [session]);
 
+  // On initial load, automatically select the latest chat session if none selected
+  useEffect(() => {
+    const fetchLatestSession = async () => {
+      if (session?.user && !currentChatSession) {
+        try {
+          const { data, error } = await supabase
+            .from('chat_sessions')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('updated_at', { ascending: false })
+            .limit(1);
+          if (!error && data) {
+            if (data.length > 0) {
+              setCurrentChatSession(data[0]);
+            } else {
+              // No existing session, create a new one
+              const newSession = await createNewChatSession();
+              if (newSession) setCurrentChatSession(newSession);
+            }
+          }
+        } catch (err) {
+          console.error('Error loading latest chat session:', err);
+        }
+      }
+    };
+    fetchLatestSession();
+  }, [session, currentChatSession]);
+
   useEffect(() => {
     if (currentChatSession) {
       loadMessages();
@@ -52,6 +136,16 @@ function App() {
       setMessages([]);
     }
   }, [currentChatSession]);
+  // Load initial selected thought for PLEX when settings are available
+  useEffect(() => {
+    if (theBrainApiKey && brainId) {
+      getUserThoughtId()
+        .then((id) => {
+          if (id) setSelectedThoughtId(id);
+        })
+        .catch((err) => console.error('Error loading user thought ID:', err));
+    }
+  }, [theBrainApiKey, brainId]);
 
   const loadMessages = async () => {
     if (!currentChatSession) return;
@@ -182,18 +276,9 @@ function App() {
     }
   };
 
-  const handleNewChat = async () => {
-    const newSession = await createNewChatSession();
-    if (newSession) {
-      setCurrentChatSession(newSession);
-      setError(null);
-    }
-  };
+  // Removed manual new chat; new session auto-created
 
-  const handleSelectSession = (session: ChatSession) => {
-    setCurrentChatSession(session);
-    setError(null);
-  };
+  // Removed manual session selection
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,6 +316,13 @@ function App() {
         brainId,
         openAIKey,
         onUpdate: setMessages,
+        onToolCall: ({ name, args, result }) => {
+          if (args?.thoughtId) {
+            setSelectedThoughtId(args.thoughtId);
+          } else if (result && typeof result === 'object' && 'id' in result) {
+            setSelectedThoughtId((result as any).id);
+          }
+        },
       });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -251,44 +343,58 @@ function App() {
       />
     );
   }
+  
+  // Command definitions for CommandBar
+  const commands: Command[] = [
+    { keys: 'Enter', description: 'Send Message', visible: 'inputFocused' },
+    { keys: 'Ctrl + S', description: 'Show Settings', visible: 'inputFocused' },
+    { keys: 'Ctrl + N', description: 'New Chat', visible: 'always' },
+    { keys: '/', description: 'Focus Input', visible: 'notInputFocused' },
+    { keys: 'Esc', description: 'Close Settings', visible: 'notInputFocused' },
+    { keys: '?', description: 'Open Settings', visible: 'notInputFocused' },
+  ];
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        onNewChat={handleNewChat}
-        onToggleSettings={() => setShowSettings(!showSettings)}
-        onSelectSession={handleSelectSession}
-        currentSessionId={currentChatSession?.id || null}
-        isDisabled={!theBrainApiKey || !brainId || !openAIKey}
-      />
+    <div className="flex flex-col h-screen bg-black text-white">
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-y-auto m-5 rounded-[20px]">
+          <Plex
+            apiKey={theBrainApiKey}
+            brainId={brainId}
+            thoughtId={selectedThoughtId}
+            onSelect={setSelectedThoughtId}
+          />
+        </div>
 
-      <div className="flex-1 flex flex-col">
-        {showSettings ? (
-          <div className="p-4">
-            <Settings onClose={() => setShowSettings(false)} />
-          </div>
-        ) : !theBrainApiKey || !brainId || !openAIKey ? (
-          <ConfigurationRequired 
-            onOpenSettings={() => setShowSettings(true)} 
-            error={error}
-            isLoading={settingsLoading}
-            onRetry={() => {
-              setError(null);
-              loadUserSettings(0);
-            }}
-          />
-        ) : (
-          <ChatInterface
-            messages={messages}
-            currentChatSession={currentChatSession}
-            input={input}
-            loading={loading}
-            error={error}
-            onInputChange={setInput}
-            onSubmit={handleSendMessage}
-          />
-        )}
+        <div className="flex-none w-full max-w-[600px] flex flex-col overflow-y-auto">
+          {showSettings ? (
+            <div className="p-4">
+              <Settings />
+            </div>
+          ) : !theBrainApiKey || !brainId || !openAIKey ? (
+            <ConfigurationRequired
+              onOpenSettings={() => setShowSettings(true)}
+              error={error}
+              isLoading={settingsLoading}
+              onRetry={() => {
+                setError(null);
+                loadUserSettings(0);
+              }}
+            />
+          ) : (
+            <ChatInterface
+              messages={messages}
+              currentChatSession={currentChatSession}
+              input={input}
+              loading={loading}
+              error={error}
+              onInputChange={setInput}
+              onSubmit={handleSendMessage}
+            />
+          )}
+        </div>
       </div>
+      <CommandBar commands={commands} />
     </div>
   );
 }

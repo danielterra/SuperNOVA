@@ -28,7 +28,8 @@ async function handleToolCalls(
   theBrain: TheBrainAPI,
   openai: OpenAIClient,
   chatSession: ChatSession,
-  onUpdate: (messages: Message[]) => void
+  onUpdate: (messages: Message[]) => void,
+  onToolCall?: (call: { name: string; args: any; result: any }) => void
 ) {
   const toolResults = [];
   
@@ -36,6 +37,10 @@ async function handleToolCalls(
     if (toolCall.type === 'function') {
       const args = JSON.parse(toolCall.function.arguments);
       const result = await theBrain[toolCall.function.name](args);
+      // Notify UI of tool call and selection
+      if (onToolCall) {
+        onToolCall({ name: toolCall.function.name, args, result });
+      }
 
       toolResults.push({
         name: toolCall.function.name,
@@ -93,7 +98,8 @@ async function handleToolCalls(
       theBrain,
       openai,
       chatSession,
-      onUpdate
+      onUpdate,
+      onToolCall
     );
   }
 
@@ -107,6 +113,7 @@ export async function sendMessage({
   brainId,
   openAIKey,
   onUpdate,
+  onToolCall,
 }: {
   input: string;
   chatSession: ChatSession;
@@ -114,6 +121,7 @@ export async function sendMessage({
   brainId: string;
   openAIKey: string;
   onUpdate: (messages: Message[]) => void;
+  onToolCall?: (call: { name: string; args: any; result: any }) => void;
 }) {
   try {
     // Get user's thought ID from settings
@@ -161,7 +169,8 @@ export async function sendMessage({
         theBrain,
         openai,
         chatSession,
-        onUpdate
+        onUpdate,
+        onToolCall
       );
     }
 

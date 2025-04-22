@@ -40,15 +40,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
         message.role === 'user' ? 'justify-end' : 'justify-start'
       }`}
     >
-      <div
-        className={`max-w-2xl rounded-lg p-4 ${
-          message.role === 'user'
-            ? 'bg-blue-600 text-white'
-            : isToolMessage && toolData
-            ? 'bg-gray-900 text-gray-100 font-mono'
-            : 'bg-white text-gray-800'
-        } ${isToolMessage ? 'shadow-lg' : 'shadow-md'}`}
-      >
+        <div
+          className={`max-w-2xl rounded-lg p-4 ${
+            message.role === 'user'
+              ? 'bg-gray-700 text-white'
+              : isToolMessage && toolData
+              ? 'bg-gray-900 text-gray-100 font-mono'
+              : 'bg-gray-900 text-white'
+          } ${isToolMessage ? 'shadow-lg' : 'shadow-md'}`}
+        >
         {isToolMessage && toolData ? (
           <div className="space-y-3">
             <button
@@ -87,10 +87,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
             )}
           </div>
         ) : (
-          <ReactMarkdown 
-            className={`prose ${
-              message.role === 'user' ? 'prose-invert' : 'prose-gray'
-            } max-w-none`}
+          <ReactMarkdown
+            className="prose prose-invert max-w-none"
           >
             {message.content}
           </ReactMarkdown>
@@ -98,7 +96,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div className={`text-xs mt-2 ${
           message.role === 'user' || isToolMessage
             ? 'text-gray-300'
-            : 'text-gray-500'
+            : 'text-gray-300'
         }`}>
           {format(new Date(message.created_at), 'HH:mm')}
         </div>

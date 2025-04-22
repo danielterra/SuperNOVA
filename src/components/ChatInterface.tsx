@@ -25,8 +25,8 @@ export function ChatInterface({
   return (
     <>
       {error && (
-        <div className="p-4 bg-red-100 border-b border-red-400">
-          <p className="text-red-700">{error}</p>
+        <div className="p-4 bg-red-800 border-b border-red-600">
+          <p className="text-red-400">{error}</p>
         </div>
       )}
       
@@ -37,6 +37,7 @@ export function ChatInterface({
         loading={loading}
         onInputChange={onInputChange}
         onSubmit={onSubmit}
+        sessionId={currentChatSession?.id}
       />
     </>
   );
