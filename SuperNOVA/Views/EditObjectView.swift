@@ -23,6 +23,7 @@ struct EditObjectView: View {
     @State private var states: [StateModel] = []
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showingDeleteAlert = false
     @State private var emojiCaptureHelper = EmojiCaptureHelper()
     @FocusState private var focusedField: ObjectField?
 
@@ -106,6 +107,14 @@ struct EditObjectView: View {
                 }
             }
 
+            ToolbarItem(placement: .destructiveAction) {
+                Button(role: .destructive) {
+                    showingDeleteAlert = true
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button("Save Changes") {
                     updateObject()
@@ -117,6 +126,14 @@ struct EditObjectView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .alert("Delete Object", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                deleteObject()
+            }
+        } message: {
+            Text("Are you sure you want to delete '\(name)'? This action cannot be undone.")
         }
         .onAppear {
             loadData()
@@ -256,6 +273,27 @@ struct EditObjectView: View {
             errorMessage = "Failed to update object. Please try again."
             showingError = true
             LogManager.shared.addError("Failed to update object '\(name)' (ID: \(objectId))", component: "EditObjectView")
+        }
+    }
+
+    private func deleteObject() {
+        guard let objectId = object["id"] as? String else {
+            errorMessage = "Invalid object ID"
+            showingError = true
+            LogManager.shared.addError("Cannot delete object: invalid object ID", component: "EditObjectView")
+            return
+        }
+
+        LogManager.shared.addLog("Attempting to delete object '\(name)' (ID: \(objectId))", component: "EditObjectView")
+
+        if EntityObjectManager.shared.deleteObject(classId: entityClass.id, objectId: objectId) {
+            LogManager.shared.addLog("Object deleted successfully: '\(name)' (ID: \(objectId))", component: "EditObjectView")
+            onObjectUpdated()
+            dismiss()
+        } else {
+            errorMessage = "Failed to delete object. Please try again."
+            showingError = true
+            LogManager.shared.addError("Failed to delete object '\(name)' (ID: \(objectId))", component: "EditObjectView")
         }
     }
 
