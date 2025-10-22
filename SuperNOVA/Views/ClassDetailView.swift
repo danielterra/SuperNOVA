@@ -19,8 +19,7 @@ struct ClassDetailView: View {
     @State private var properties: [PropertyModel] = []
     @State private var states: [StateModel] = []
     @State private var viewMode: ViewMode = .grid
-    @State private var selectedObjectForEdit: [String: Any]?
-    @State private var showingEditSheet = false
+    @State private var selectedObjectForEdit: ObjectWrapper?
 
     let columns = [
         GridItem(.adaptive(minimum: 120, maximum: 150), spacing: 20)
@@ -61,21 +60,16 @@ struct ClassDetailView: View {
                     entityClass: entityClass,
                     onObjectUpdated: loadData,
                     onObjectSelected: { object in
-                        selectedObjectForEdit = object
-                        showingEditSheet = true
+                        selectedObjectForEdit = ObjectWrapper(data: object)
                     }
                 )
             }
         }
-        .sheet(isPresented: $showingEditSheet) {
-            if let object = selectedObjectForEdit {
-                NavigationStack {
-                    EditObjectView(entityClass: entityClass, object: object) {
-                        loadData()
-                    }
+        .sheet(item: $selectedObjectForEdit) { wrapper in
+            NavigationStack {
+                EditObjectView(entityClass: entityClass, object: wrapper.data) {
+                    loadData()
                 }
-            } else {
-                Text("Error: No object selected")
             }
         }
         .navigationTitle("")
@@ -156,6 +150,12 @@ struct ClassDetailView: View {
         states = EntityClassManager.shared.getStates(for: entityClass.id)
         objects = EntityObjectManager.shared.getAllObjects(classId: entityClass.id)
     }
+}
+
+// Wrapper to make dictionary Identifiable for sheet(item:)
+struct ObjectWrapper: Identifiable {
+    let id = UUID()
+    let data: [String: Any]
 }
 
 #Preview {
