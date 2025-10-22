@@ -23,7 +23,7 @@ struct StateItem: Identifiable {
 
 // MARK: - Property Item
 
-struct PropertyItem: Identifiable {
+struct PropertyItem: Identifiable, Equatable {
     let id: String
     var name: String
     var type: PropertyType

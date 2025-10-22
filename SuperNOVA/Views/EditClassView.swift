@@ -173,19 +173,23 @@ struct EditClassView: View {
             }
 
             // Create new properties
-            let newProperties = properties.filter { $0.id.isEmpty && !$0.name.isEmpty }
-            for property in newProperties {
+            for (index, property) in properties.enumerated() where property.id.isEmpty && !property.name.isEmpty {
                 let propertyId = EntityClassManager.shared.createProperty(
                     entityClassId: entityClass.id,
                     name: property.name,
                     type: property.type,
                     isRequired: property.isRequired,
-                    order: properties.firstIndex(where: { $0.id == property.id }) ?? 0,
+                    order: index,
                     referenceTargetClassId: property.referenceTargetClassId
                 )
                 if propertyId != nil {
-                    LogManager.shared.addLog("Created new property: '\(property.name)'", component: "EditClassView")
+                    LogManager.shared.addLog("Created new property: '\(property.name)' with order \(index)", component: "EditClassView")
                 }
+            }
+
+            // Update order of existing properties
+            for (index, property) in properties.enumerated() where !property.id.isEmpty {
+                _ = EntityClassManager.shared.updatePropertyOrder(propertyId: property.id, newOrder: index)
             }
 
             if let updatedClass = EntityClassManager.shared.getEntityClass(id: entityClass.id) {

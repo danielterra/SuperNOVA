@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct EditPropertiesListEditor: View {
     @Binding var properties: [PropertyItem]
     let availableClasses: [EntityClassModel]
+    @State private var draggedProperty: PropertyItem?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,7 +34,7 @@ struct EditPropertiesListEditor: View {
 
             Divider()
 
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 12) {
                     // Default properties (read-only)
                     VStack(alignment: .leading, spacing: 8) {
@@ -56,68 +58,30 @@ struct EditPropertiesListEditor: View {
                             .padding(.top, 8)
                     }
 
-                    // Custom properties
-                    ForEach(properties.indices, id: \.self) { index in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Name")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    TextField("Property name", text: $properties[index].name)
-                                        .textFieldStyle(.roundedBorder)
-                                }
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Type")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Picker("", selection: $properties[index].type) {
-                                        ForEach(PropertyType.allCases, id: \.self) { type in
-                                            Text(type.displayName).tag(type)
+                    // Custom properties (with drag & drop reordering)
+                    ForEach(properties) { property in
+                        if let index = properties.firstIndex(where: { $0.id == property.id }) {
+                            PropertyRow(
+                                property: $properties[index],
+                                availableClasses: availableClasses,
+                                onDelete: {
+                                    withAnimation {
+                                        if let idx = properties.firstIndex(where: { $0.id == property.id }) {
+                                            properties.remove(at: idx)
                                         }
                                     }
-                                    .frame(width: 180)
                                 }
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(" ")
-                                        .font(.caption)
-                                    Toggle("Required", isOn: $properties[index].isRequired)
-                                        .toggleStyle(.checkbox)
-                                }
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(" ")
-                                        .font(.caption)
-                                    Button {
-                                        properties.remove(at: index)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundColor(.red)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                            )
+                            .opacity(draggedProperty?.id == property.id ? 0.5 : 1.0)
+                            .onDrag {
+                                self.draggedProperty = property
+                                return NSItemProvider(object: property.id as NSString)
                             }
-
-                            // Reference class selector (only for reference types)
-                            if properties[index].type == .referenceUnique || properties[index].type == .referenceMultiple {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Reference Class")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Picker("Select class", selection: $properties[index].referenceTargetClassId) {
-                                        Text("Select class...").tag(nil as String?)
-                                        ForEach(availableClasses, id: \.id) { availableClass in
-                                            Text("\(availableClass.icon ?? "") \(availableClass.name)")
-                                                .tag(availableClass.id as String?)
-                                        }
-                                    }
-                                    .frame(width: 250)
-                                }
-                            }
-
-                            Divider()
+                            .onDrop(of: [.text], delegate: PropertyDropDelegate(
+                                destinationProperty: property,
+                                properties: $properties,
+                                draggedProperty: $draggedProperty
+                            ))
                         }
                     }
 
@@ -128,6 +92,112 @@ struct EditPropertiesListEditor: View {
                 }
                 .padding()
             }
+        }
+    }
+}
+
+// Drop delegate for drag & drop reordering
+struct PropertyDropDelegate: DropDelegate {
+    let destinationProperty: PropertyItem
+    @Binding var properties: [PropertyItem]
+    @Binding var draggedProperty: PropertyItem?
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedProperty = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedProperty = self.draggedProperty,
+              draggedProperty.id != destinationProperty.id,
+              let fromIndex = properties.firstIndex(where: { $0.id == draggedProperty.id }),
+              let toIndex = properties.firstIndex(where: { $0.id == destinationProperty.id }) else {
+            return
+        }
+
+        withAnimation(.default) {
+            properties.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+    }
+}
+
+// Property row component
+struct PropertyRow: View {
+    @Binding var property: PropertyItem
+    let availableClasses: [EntityClassModel]
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                // Drag handle
+                Image(systemName: "line.3.horizontal")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .padding(.trailing, 4)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Name")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextField("Property name", text: $property.name)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Type")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("", selection: $property.type) {
+                        ForEach(PropertyType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+                    .frame(width: 180)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(" ")
+                        .font(.caption)
+                    Toggle("Required", isOn: $property.isRequired)
+                        .toggleStyle(.checkbox)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(" ")
+                        .font(.caption)
+                    Button {
+                        onDelete()
+                    } label: {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Reference class selector (only for reference types)
+            if property.type == .referenceUnique || property.type == .referenceMultiple {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Reference Class")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("Select class", selection: $property.referenceTargetClassId) {
+                        Text("Select class...").tag(nil as String?)
+                        ForEach(availableClasses, id: \.id) { availableClass in
+                            Text("\(availableClass.icon ?? "") \(availableClass.name)")
+                                .tag(availableClass.id as String?)
+                        }
+                    }
+                    .frame(width: 250)
+                }
+            }
+
+            Divider()
         }
     }
 }

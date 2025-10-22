@@ -92,6 +92,10 @@ class EntityClassManager {
         return propertyRepo.getAll(for: entityClassId)
     }
 
+    func updatePropertyOrder(propertyId: String, newOrder: Int) -> Bool {
+        return propertyRepo.updateOrder(propertyId: propertyId, newOrder: newOrder)
+    }
+
     func deleteProperty(id: String) -> Bool {
         LogManager.shared.addLog("Deleting property: \(id)", component: "EntityClassManager")
         let result = propertyRepo.delete(id: id)

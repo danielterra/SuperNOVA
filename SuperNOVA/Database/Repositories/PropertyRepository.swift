@@ -56,6 +56,12 @@ class PropertyRepository {
         return results.map { mapToModel(row: $0) }
     }
 
+    func updateOrder(propertyId: String, newOrder: Int) -> Bool {
+        return db.execute("""
+            UPDATE property SET order_index = ? WHERE id = ?
+        """, parameters: [newOrder, propertyId])
+    }
+
     func delete(id: String) -> Bool {
         return db.execute("DELETE FROM property WHERE id = ?", parameters: [id])
     }
