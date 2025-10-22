@@ -26,6 +26,8 @@ struct GridView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.black)
     }
 }
 
@@ -94,11 +96,11 @@ struct ObjectGridCard: View {
         }
         .padding(8)
         .frame(width: 120, height: 120)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(Color.black)
         .cornerRadius(8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(isHovering ? Color.blue.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: isHovering ? 2 : 1)
+                .stroke(isHovering ? Color.blue.opacity(0.4) : Color.clear, lineWidth: isHovering ? 2 : 0)
         )
         .overlay(alignment: .topTrailing) {
             if isHovering {

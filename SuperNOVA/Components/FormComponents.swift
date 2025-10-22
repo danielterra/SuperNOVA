@@ -88,12 +88,8 @@ struct IconPickerButton<Field: Hashable>: View {
                             .foregroundColor(.blue)
                     }
                     .padding(8)
-                    .background(Color(nsColor: .textBackgroundColor))
+                    .background(Color.black)
                     .cornerRadius(6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
                 }
                 .buttonStyle(.plain)
 
@@ -138,20 +134,14 @@ struct DescriptionEditor<Field: Hashable>: View {
                 TextEditor(text: $description)
                     .frame(minHeight: 100)
                     .scrollContentBackground(.hidden)
-                    .background(Color(nsColor: .textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    .pillTextEditorStyle()
                     .focused(focusedField, equals: fieldIdentifier)
-                    .padding(4)
 
                 if description.isEmpty {
                     Text("Optional description...")
                         .foregroundColor(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 20)
                         .allowsHitTesting(false)
                 }
             }
@@ -185,7 +175,7 @@ struct StatesListEditor: View {
                 ForEach(states.indices, id: \.self) { index in
                     HStack(spacing: 8) {
                         TextField("State name", text: $states[index].name)
-                            .textFieldStyle(.roundedBorder)
+                            .pillTextFieldStyle()
 
                         Picker("", selection: $states[index].type) {
                             Text("Inactive").tag(StateType.inactive)
@@ -193,6 +183,7 @@ struct StatesListEditor: View {
                             Text("In Progress").tag(StateType.inProgress)
                         }
                         .frame(width: 130)
+                        .pillPickerStyle()
 
                         Button {
                             states.remove(at: index)

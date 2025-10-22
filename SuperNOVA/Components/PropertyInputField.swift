@@ -32,19 +32,16 @@ struct PropertyInputField: View {
                         .frame(minHeight: 100)
                         .font(.body)
                         .scrollContentBackground(.hidden)
-                        .background(Color(nsColor: .textBackgroundColor))
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-                        )
+                        .pillTextEditorStyle()
                 }
             } else {
                 TextField(label, text: $value, prompt: Text("Enter \(property.name.lowercased())"))
+                    .pillTextFieldStyle()
             }
 
         case .number:
             TextField(label, text: $value, prompt: Text("Enter number"))
+                .pillTextFieldStyle()
                 .onChange(of: value) { oldValue, newValue in
                     // Only allow numbers
                     let filtered = newValue.filter { $0.isNumber || $0 == "-" }
@@ -55,6 +52,7 @@ struct PropertyInputField: View {
 
         case .currency:
             TextField(label, text: $value, prompt: Text("Enter amount"))
+                .pillTextFieldStyle()
                 .onChange(of: value) { oldValue, newValue in
                     // Only allow numbers and decimal point
                     let filtered = newValue.filter { $0.isNumber || $0 == "." || $0 == "-" }
@@ -64,39 +62,54 @@ struct PropertyInputField: View {
                 }
 
         case .date:
-            DatePicker(label, selection: $dateValue, displayedComponents: [.date])
-                .onChange(of: dateValue) { oldValue, newValue in
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy-MM-dd"
-                    value = formatter.string(from: newValue)
-                }
-                .onAppear {
-                    if !value.isEmpty, let date = parseDate(value) {
-                        dateValue = date
+            VStack(alignment: .leading, spacing: 8) {
+                Text(label)
+                    .font(.headline)
+                DatePicker("", selection: $dateValue, displayedComponents: [.date])
+                    .labelsHidden()
+                    .pillPickerStyle()
+                    .onChange(of: dateValue) { oldValue, newValue in
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "yyyy-MM-dd"
+                        value = formatter.string(from: newValue)
                     }
-                }
+                    .onAppear {
+                        if !value.isEmpty, let date = parseDate(value) {
+                            dateValue = date
+                        }
+                    }
+            }
 
         case .datetime:
-            DatePicker(label, selection: $dateValue, displayedComponents: [.date, .hourAndMinute])
-                .onChange(of: dateValue) { oldValue, newValue in
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy-MM-dd HH:mm"
-                    value = formatter.string(from: newValue)
-                }
-                .onAppear {
-                    if !value.isEmpty, let date = parseDateTime(value) {
-                        dateValue = date
+            VStack(alignment: .leading, spacing: 8) {
+                Text(label)
+                    .font(.headline)
+                DatePicker("", selection: $dateValue, displayedComponents: [.date, .hourAndMinute])
+                    .labelsHidden()
+                    .pillPickerStyle()
+                    .onChange(of: dateValue) { oldValue, newValue in
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+                        value = formatter.string(from: newValue)
                     }
-                }
+                    .onAppear {
+                        if !value.isEmpty, let date = parseDateTime(value) {
+                            dateValue = date
+                        }
+                    }
+            }
 
         case .duration:
             TextField(label, text: $value, prompt: Text("e.g., 2h 30m"))
+                .pillTextFieldStyle()
 
         case .location:
             TextField(label, text: $value, prompt: Text("Enter location"))
+                .pillTextFieldStyle()
 
         case .images, .files, .audios:
             TextField(label, text: $value, prompt: Text("Enter file paths"))
+                .pillTextFieldStyle()
 
         case .referenceUnique, .referenceMultiple:
             ReferenceFieldPicker(property: property, selectedId: $value)

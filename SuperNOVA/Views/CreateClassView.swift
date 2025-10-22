@@ -50,7 +50,7 @@ struct CreateClassView: View {
                 .buttonStyle(.plain)
             }
             .padding()
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(Color.black)
 
             Divider()
 
@@ -74,7 +74,7 @@ struct CreateClassView: View {
                                 .foregroundColor(.primary)
 
                             TextField("Class name", text: $name)
-                                .textFieldStyle(.roundedBorder)
+                                .pillTextFieldStyle()
                                 .textContentType(.none)
                                 .autocorrectionDisabled()
                                 .focused($focusedField, equals: .name)
@@ -107,7 +107,10 @@ struct CreateClassView: View {
                     }
                     .padding()
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.black)
             }
+            .background(Color.black)
 
             Divider()
 
@@ -128,7 +131,7 @@ struct CreateClassView: View {
                 .keyboardShortcut(.defaultAction)
             }
             .padding()
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(Color.black)
         }
         .frame(width: 550, height: 700)
         .alert("Error", isPresented: $showingError) {

@@ -145,7 +145,7 @@ struct PropertyRow: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     TextField("Property name", text: $property.name)
-                        .textFieldStyle(.roundedBorder)
+                        .pillTextFieldStyle()
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -158,6 +158,7 @@ struct PropertyRow: View {
                         }
                     }
                     .frame(width: 180)
+                    .pillPickerStyle()
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -204,6 +205,7 @@ struct PropertyRow: View {
                         }
                     }
                     .frame(width: 250)
+                    .pillPickerStyle()
                 }
             }
 

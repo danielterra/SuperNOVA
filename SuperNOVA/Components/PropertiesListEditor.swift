@@ -49,7 +49,7 @@ struct PropertiesListEditor: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 8) {
                             TextField("Property name", text: $properties[index].name)
-                                .textFieldStyle(.roundedBorder)
+                                .pillTextFieldStyle()
 
                             Picker("", selection: $properties[index].type) {
                                 ForEach(PropertyType.allCases, id: \.self) { type in
@@ -57,6 +57,7 @@ struct PropertiesListEditor: View {
                                 }
                             }
                             .frame(width: 150)
+                            .pillPickerStyle()
 
                             Toggle("Required", isOn: $properties[index].isRequired)
                                 .toggleStyle(.checkbox)

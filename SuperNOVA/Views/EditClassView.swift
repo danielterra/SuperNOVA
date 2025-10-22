@@ -53,7 +53,7 @@ struct EditClassView: View {
                                 .font(.headline)
 
                             TextField("Class name", text: $name)
-                                .textFieldStyle(.roundedBorder)
+                                .pillTextFieldStyle()
                                 .focused($focusedField, equals: .name)
                         }
 
@@ -77,6 +77,8 @@ struct EditClassView: View {
                     }
                     .padding()
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.black)
 
                 // Hidden emoji capture field
                 EmojiCaptureView(capturedEmoji: $icon, helper: emojiCaptureHelper)
@@ -94,7 +96,10 @@ struct EditClassView: View {
             )
             .frame(maxWidth: .infinity)
         }
+        .background(Color.black)
         .navigationTitle("Edit Class")
+        .toolbarBackground(Color.black, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Save Changes") {

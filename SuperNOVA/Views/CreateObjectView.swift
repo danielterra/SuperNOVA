@@ -43,33 +43,48 @@ struct CreateObjectView: View {
                     Spacer()
                 }
                 .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+                .listRowBackground(Color.black)
             }
 
             // Basic Information
             Section {
-                TextField("Name *", text: $name, prompt: Text("Object name"))
-                    .focused($focusedField, equals: .name)
-
-                IconPickerButton(
-                    icon: $icon,
-                    classIcon: entityClass.icon,
-                    emojiCaptureHelper: emojiCaptureHelper,
-                    focusedField: $focusedField
-                )
-
-                Picker("State *", selection: $selectedStateId) {
-                    Text("Select state...").tag("")
-                    ForEach(states, id: \.id) { state in
-                        HStack {
-                            Circle()
-                                .fill(stateColor(for: state.type))
-                                .frame(width: 8, height: 8)
-                            Text(state.name)
-                        }
-                        .tag(state.id)
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Name *")
+                        .font(.headline)
+                    TextField("", text: $name, prompt: Text("Object name"))
+                        .pillTextFieldStyle()
+                        .focused($focusedField, equals: .name)
                 }
+                .listRowBackground(Color.black)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    IconPickerButton(
+                        icon: $icon,
+                        classIcon: entityClass.icon,
+                        emojiCaptureHelper: emojiCaptureHelper,
+                        focusedField: $focusedField
+                    )
+                }
+                .listRowBackground(Color.black)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("State *")
+                        .font(.headline)
+                    Picker("", selection: $selectedStateId) {
+                        Text("Select state...").tag("")
+                        ForEach(states, id: \.id) { state in
+                            HStack {
+                                Circle()
+                                    .fill(stateColor(for: state.type))
+                                    .frame(width: 8, height: 8)
+                                Text(state.name)
+                            }
+                            .tag(state.id)
+                        }
+                    }
+                    .pillPickerStyle()
+                }
+                .listRowBackground(Color.black)
             } header: {
                 Text("Basic Information")
             }
@@ -85,6 +100,7 @@ struct CreateObjectView: View {
                                 set: { propertyValues[property.name] = $0 }
                             )
                         )
+                        .listRowBackground(Color.black)
                     }
                 }
             }
@@ -94,10 +110,15 @@ struct CreateObjectView: View {
                 Text("Fields marked with * are required.")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .listRowBackground(Color.black)
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(Color.black)
         .navigationTitle("New \(entityClass.name)")
+        .toolbarBackground(Color.black, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {

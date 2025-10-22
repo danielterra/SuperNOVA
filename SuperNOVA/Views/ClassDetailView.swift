@@ -48,8 +48,10 @@ struct ClassDetailView: View {
                         systemImage: "tray",
                         description: Text("Create your first object for this class")
                     )
+                    .background(Color.black)
                 } else {
                     GridView(objects: objects, entityClass: entityClass, states: states, onObjectUpdated: loadData)
+                        .background(Color.black)
                 }
             } else {
                 TableView(
@@ -63,14 +65,20 @@ struct ClassDetailView: View {
                         selectedObjectForEdit = ObjectWrapper(data: object)
                     }
                 )
+                .background(Color.black)
             }
         }
+        .background(Color.black)
+        .toolbarBackground(Color.black, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         .sheet(item: $selectedObjectForEdit) { wrapper in
             NavigationStack {
                 EditObjectView(entityClass: entityClass, object: wrapper.data) {
                     loadData()
                 }
             }
+            .background(Color.black)
+            .presentationBackground(Color.black)
         }
         .navigationTitle("")
         .toolbar {

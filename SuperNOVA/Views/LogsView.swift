@@ -42,6 +42,8 @@ struct LogsView: View {
                     .id(log.id)
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.black)
                 .onChange(of: logs.count) { oldValue, newValue in
                     if let firstLog = logs.first {
                         withAnimation {
@@ -51,6 +53,8 @@ struct LogsView: View {
                 }
             }
             .navigationTitle("Server Logs")
+            .toolbarBackground(Color.black, for: .windowToolbar)
+            .toolbarBackground(.visible, for: .windowToolbar)
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     if !selection.isEmpty {

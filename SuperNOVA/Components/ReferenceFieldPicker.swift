@@ -77,29 +77,18 @@ struct ReferenceFieldPicker: View {
                         .foregroundColor(.secondary)
                         .font(.system(size: 12))
                 }
-                .padding(8)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
             .buttonStyle(.plain)
+            .glassEffect(in: .capsule)
 
             // Expanded search and list
             if isExpanded {
                 VStack(spacing: 8) {
                     // Search field
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("Search by name...", text: $searchText)
-                            .textFieldStyle(.plain)
-                    }
-                    .padding(6)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(6)
+                    TextField("Search by name...", text: $searchText, prompt: Text("Search by name..."))
+                        .pillTextFieldStyle()
 
                     Divider()
 
@@ -161,13 +150,8 @@ struct ReferenceFieldPicker: View {
                     }
                     .frame(maxHeight: 200)
                 }
-                .padding(8)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
+                .padding(12)
+                .glassEffect(in: .rect(cornerRadius: 12))
             }
         }
         .onAppear {

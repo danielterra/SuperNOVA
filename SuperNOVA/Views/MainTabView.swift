@@ -30,6 +30,8 @@ struct MainTabView: View {
             }
             .navigationTitle("SuperNOVA")
             .frame(minWidth: 200)
+            .scrollContentBackground(.hidden)
+            .background(Color.black)
         } detail: {
             switch selectedItem {
             case .logs:
@@ -38,6 +40,7 @@ struct MainTabView: View {
                 ClassesListView()
             }
         }
+        .background(Color.black)
     }
 }
 

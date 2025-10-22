@@ -44,12 +44,17 @@ struct ClassesListView: View {
                         }
                         .padding()
                     }
+                    .scrollContentBackground(.hidden)
+                    .background(Color.black)
                     .onAppear {
                         loadClasses()
                     }
                 }
             }
+            .background(Color.black)
             .navigationTitle("Classes")
+            .toolbarBackground(Color.black, for: .windowToolbar)
+            .toolbarBackground(.visible, for: .windowToolbar)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -165,11 +170,11 @@ struct ClassCardView: View {
             .frame(maxWidth: .infinity, minHeight: 180, maxHeight: 180)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(nsColor: .controlBackgroundColor))
+                    .fill(Color.black)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isHovering ? Color.blue.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: isHovering ? 2 : 1)
+                    .stroke(isHovering ? Color.blue.opacity(0.4) : Color.clear, lineWidth: isHovering ? 2 : 0)
             )
         }
         .buttonStyle(.plain)

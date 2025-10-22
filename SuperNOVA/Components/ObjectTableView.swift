@@ -223,6 +223,8 @@ struct TableView: View {
                 tableContent
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.black)
     }
 
     private func deleteSelectedObjects() {
