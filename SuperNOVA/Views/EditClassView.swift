@@ -128,6 +128,7 @@ struct EditClassView: View {
                 name: property.name,
                 type: property.type,
                 isRequired: property.isRequired,
+                isLongText: property.isLongText,
                 referenceTargetClassId: property.referenceTargetClassId
             )
         }
@@ -179,6 +180,7 @@ struct EditClassView: View {
                     name: property.name,
                     type: property.type,
                     isRequired: property.isRequired,
+                    isLongText: property.isLongText,
                     order: index,
                     referenceTargetClassId: property.referenceTargetClassId
                 )
@@ -187,8 +189,16 @@ struct EditClassView: View {
                 }
             }
 
-            // Update order of existing properties
+            // Update existing properties
             for (index, property) in properties.enumerated() where !property.id.isEmpty {
+                _ = EntityClassManager.shared.updateProperty(
+                    propertyId: property.id,
+                    name: property.name,
+                    type: property.type,
+                    isRequired: property.isRequired,
+                    isLongText: property.isLongText,
+                    referenceTargetClassId: property.referenceTargetClassId
+                )
                 _ = EntityClassManager.shared.updatePropertyOrder(propertyId: property.id, newOrder: index)
             }
 

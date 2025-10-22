@@ -68,6 +68,7 @@ class EntityClassManager {
         name: String,
         type: PropertyType,
         isRequired: Bool = false,
+        isLongText: Bool = false,
         order: Int = 0,
         referenceTargetClassId: String? = nil
     ) -> String? {
@@ -77,6 +78,7 @@ class EntityClassManager {
             name: name,
             type: type,
             isRequired: isRequired,
+            isLongText: isLongText,
             order: order,
             referenceTargetClassId: referenceTargetClassId
         )
@@ -90,6 +92,31 @@ class EntityClassManager {
 
     func getProperties(for entityClassId: String) -> [PropertyModel] {
         return propertyRepo.getAll(for: entityClassId)
+    }
+
+    func updateProperty(
+        propertyId: String,
+        name: String? = nil,
+        type: PropertyType? = nil,
+        isRequired: Bool? = nil,
+        isLongText: Bool? = nil,
+        referenceTargetClassId: String? = nil
+    ) -> Bool {
+        LogManager.shared.addLog("Updating property: \(propertyId)", component: "EntityClassManager")
+        let result = propertyRepo.update(
+            propertyId: propertyId,
+            name: name,
+            type: type,
+            isRequired: isRequired,
+            isLongText: isLongText,
+            referenceTargetClassId: referenceTargetClassId
+        )
+        if result {
+            LogManager.shared.addLog("Property updated successfully", component: "EntityClassManager")
+        } else {
+            LogManager.shared.addError("Failed to update property", component: "EntityClassManager")
+        }
+        return result
     }
 
     func updatePropertyOrder(propertyId: String, newOrder: Int) -> Bool {

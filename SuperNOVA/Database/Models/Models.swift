@@ -22,6 +22,7 @@ struct PropertyModel: Identifiable {
     let name: String
     let type: PropertyType
     let isRequired: Bool
+    let isLongText: Bool
     let order: Int
     let referenceTargetClassId: String?
 }

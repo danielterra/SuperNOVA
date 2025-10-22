@@ -37,6 +37,18 @@ class SQLiteSchemaManager {
             print("✅ Migration completed")
         }
 
+        // Migration 3: Check if property table has is_long_text column
+        let propertyColumns = executor.query("PRAGMA table_info(property)")
+        let hasIsLongTextColumn = propertyColumns.contains { row in
+            (row["name"] as? String) == "is_long_text"
+        }
+
+        if !hasIsLongTextColumn {
+            print("🔄 Running migration: Adding 'is_long_text' column to property table...")
+            executor.execute("ALTER TABLE property ADD COLUMN is_long_text INTEGER NOT NULL DEFAULT 0")
+            print("✅ Migration completed")
+        }
+
         // Migration 2: Add name and icon columns to existing dynamic tables
         let classes = executor.query("SELECT id FROM entity_class")
         for classRow in classes {

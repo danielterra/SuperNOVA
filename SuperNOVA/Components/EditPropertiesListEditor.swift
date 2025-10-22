@@ -167,6 +167,16 @@ struct PropertyRow: View {
                         .toggleStyle(.checkbox)
                 }
 
+                // Long text toggle (only for text type)
+                if property.type == .text {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(" ")
+                            .font(.caption)
+                        Toggle("Long Text", isOn: $property.isLongText)
+                            .toggleStyle(.checkbox)
+                    }
+                }
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(" ")
                         .font(.caption)

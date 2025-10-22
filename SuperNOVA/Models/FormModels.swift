@@ -28,13 +28,15 @@ struct PropertyItem: Identifiable, Equatable {
     var name: String
     var type: PropertyType
     var isRequired: Bool
+    var isLongText: Bool
     var referenceTargetClassId: String?
 
-    init(id: String = UUID().uuidString, name: String, type: PropertyType, isRequired: Bool, referenceTargetClassId: String? = nil) {
+    init(id: String = UUID().uuidString, name: String, type: PropertyType, isRequired: Bool, isLongText: Bool = false, referenceTargetClassId: String? = nil) {
         self.id = id
         self.name = name
         self.type = type
         self.isRequired = isRequired
+        self.isLongText = isLongText
         self.referenceTargetClassId = referenceTargetClassId
     }
 }

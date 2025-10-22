@@ -23,7 +23,25 @@ struct PropertyInputField: View {
     var body: some View {
         switch property.type {
         case .text:
-            TextField(label, text: $value, prompt: Text("Enter \(property.name.lowercased())"))
+            if property.isLongText {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(label)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextEditor(text: $value)
+                        .frame(minHeight: 100)
+                        .font(.body)
+                        .scrollContentBackground(.hidden)
+                        .background(Color(nsColor: .textBackgroundColor))
+                        .cornerRadius(4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                        )
+                }
+            } else {
+                TextField(label, text: $value, prompt: Text("Enter \(property.name.lowercased())"))
+            }
 
         case .number:
             TextField(label, text: $value, prompt: Text("Enter number"))
