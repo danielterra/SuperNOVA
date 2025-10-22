@@ -135,19 +135,11 @@ struct ObjectGridCard: View {
 
     private func deleteObject() {
         guard let objectId = object["id"] as? String else {
-            LogManager.shared.addError("Cannot delete object: invalid object ID", component: "ObjectGridCard")
             return
         }
 
-        let objectName = object["name"] as? String ?? "Unknown"
-        LogManager.shared.addLog("Attempting to delete object '\(objectName)' (ID: \(objectId))", component: "ObjectGridCard")
-
-        if EntityObjectManager.shared.deleteObject(classId: entityClass.id, objectId: objectId) {
-            LogManager.shared.addLog("Object deleted successfully from grid view: '\(objectName)'", component: "ObjectGridCard")
-            onObjectUpdated()
-        } else {
-            LogManager.shared.addError("Failed to delete object '\(objectName)' (ID: \(objectId))", component: "ObjectGridCard")
-        }
+        _ = EntityObjectManager.shared.deleteObject(classId: entityClass.id, objectId: objectId)
+        onObjectUpdated()
     }
 
     private func stateColor(for type: StateType) -> Color {

@@ -10,11 +10,12 @@ import SwiftData
 
 struct LogsView: View {
     @Query(sort: \Log.timestamp, order: .reverse) private var logs: [Log]
+    @State private var selection = Set<Log.ID>()
 
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
-                List(logs) { log in
+                List(logs, selection: $selection) { log in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(log.timestamp.formatted(date: .omitted, time: .standard))
@@ -50,7 +51,36 @@ struct LogsView: View {
                 }
             }
             .navigationTitle("Server Logs")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    if !selection.isEmpty {
+                        Button(action: copySelectedLogs) {
+                            Label("Copy \(selection.count) log\(selection.count == 1 ? "" : "s")", systemImage: "doc.on.doc")
+                        }
+                        .keyboardShortcut("c", modifiers: .command)
+                    }
+                }
+            }
         }
+    }
+
+    private func copySelectedLogs() {
+        let selectedLogs = logs.filter { selection.contains($0.id) }
+
+        // Sort by timestamp (oldest first for readability when pasted)
+        let sortedLogs = selectedLogs.sorted { $0.timestamp < $1.timestamp }
+
+        // Format logs as text
+        let logText = sortedLogs.map { log in
+            let timeString = log.timestamp.formatted(date: .omitted, time: .standard)
+            let severityPrefix = log.severity == .error ? "[ERROR] " : ""
+            return "\(timeString) \(severityPrefix)\(log.message)"
+        }.joined(separator: "\n")
+
+        // Copy to clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(logText, forType: .string)
     }
 }
 

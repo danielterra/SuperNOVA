@@ -32,15 +32,11 @@ class EntityClassManager {
     }
 
     func getEntityClass(id: String) -> EntityClassModel? {
-        LogManager.shared.addLog("Getting entity class with ID: \(id)", component: "EntityClassManager")
         return entityClassRepo.get(id: id)
     }
 
     func getAllEntityClasses() -> [EntityClassModel] {
-        LogManager.shared.addLog("Getting all entity classes", component: "EntityClassManager")
-        let classes = entityClassRepo.getAll()
-        LogManager.shared.addLog("Found \(classes.count) entity classes", component: "EntityClassManager")
-        return classes
+        return entityClassRepo.getAll()
     }
 
     func updateEntityClass(id: String, name: String? = nil, icon: String? = nil, description: String? = nil) -> Bool {
@@ -93,10 +89,7 @@ class EntityClassManager {
     }
 
     func getProperties(for entityClassId: String) -> [PropertyModel] {
-        LogManager.shared.addLog("Getting properties for class: \(entityClassId)", component: "EntityClassManager")
-        let properties = propertyRepo.getAll(for: entityClassId)
-        LogManager.shared.addLog("Found \(properties.count) properties", component: "EntityClassManager")
-        return properties
+        return propertyRepo.getAll(for: entityClassId)
     }
 
     func deleteProperty(id: String) -> Bool {
@@ -131,10 +124,7 @@ class EntityClassManager {
     }
 
     func getStates(for entityClassId: String) -> [StateModel] {
-        LogManager.shared.addLog("Getting states for class: \(entityClassId)", component: "EntityClassManager")
-        let states = stateRepo.getAll(for: entityClassId)
-        LogManager.shared.addLog("Found \(states.count) states", component: "EntityClassManager")
-        return states
+        return stateRepo.getAll(for: entityClassId)
     }
 
     func deleteState(id: String) -> Bool {
@@ -180,10 +170,7 @@ class EntityClassManager {
     }
 
     func getActions(for entityClassId: String) -> [ActionModel] {
-        LogManager.shared.addLog("Getting actions for class: \(entityClassId)", component: "EntityClassManager")
-        let actions = actionRepo.getAll(for: entityClassId)
-        LogManager.shared.addLog("Found \(actions.count) actions", component: "EntityClassManager")
-        return actions
+        return actionRepo.getAll(for: entityClassId)
     }
 
     func deleteAction(id: String) -> Bool {

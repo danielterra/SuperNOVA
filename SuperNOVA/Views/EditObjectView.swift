@@ -147,24 +147,17 @@ struct EditObjectView: View {
     }
 
     private func loadData() {
-        guard let objectId = object["id"] as? String else {
-            LogManager.shared.addError("Cannot load data: invalid object ID", component: "EditObjectView")
+        guard object["id"] as? String != nil else {
             return
         }
 
-        LogManager.shared.addLog("Loading data for editing \(entityClass.name) object (ID: \(objectId))", component: "EditObjectView")
-
         properties = EntityClassManager.shared.getProperties(for: entityClass.id)
         states = EntityClassManager.shared.getStates(for: entityClass.id)
-
-        LogManager.shared.addLog("Loaded \(properties.count) properties and \(states.count) states", component: "EditObjectView")
 
         // Load current object values
         name = object["name"] as? String ?? ""
         icon = object["icon"] as? String ?? ""
         selectedStateId = object["current_state_id"] as? String ?? ""
-
-        LogManager.shared.addLog("Loaded object: '\(name)' with current state \(selectedStateId)", component: "EditObjectView")
 
         // Load property values
         for property in properties {
@@ -173,8 +166,6 @@ struct EditObjectView: View {
                 propertyValues[property.name] = formatValueForEditing(value, type: property.type)
             }
         }
-
-        LogManager.shared.addLog("Loaded \(propertyValues.count) property values for editing", component: "EditObjectView")
     }
 
     private func formatValueForEditing(_ value: Any, type: PropertyType) -> String {
@@ -199,18 +190,14 @@ struct EditObjectView: View {
 
     private func updateObject() {
         guard isValid else {
-            LogManager.shared.addError("Cannot update object: validation failed", component: "EditObjectView")
             return
         }
 
         guard let objectId = object["id"] as? String else {
             errorMessage = "Invalid object ID"
             showingError = true
-            LogManager.shared.addError("Cannot update object: invalid object ID", component: "EditObjectView")
             return
         }
-
-        LogManager.shared.addLog("Attempting to update \(entityClass.name) object '\(name)' (ID: \(objectId))", component: "EditObjectView")
 
         // Validate required properties
         for property in properties where property.isRequired {
@@ -218,7 +205,6 @@ struct EditObjectView: View {
             if value.isEmpty {
                 errorMessage = "Property '\(property.name)' is required."
                 showingError = true
-                LogManager.shared.addError("Validation failed: required property '\(property.name)' is empty", component: "EditObjectView")
                 return
             }
         }
@@ -259,20 +245,16 @@ struct EditObjectView: View {
             }
         }
 
-        LogManager.shared.addLog("Updating object with \(convertedValues.count) field values", component: "EditObjectView")
-
         if EntityObjectManager.shared.updateObject(
             classId: entityClass.id,
             objectId: objectId,
             propertyValues: convertedValues
         ) {
-            LogManager.shared.addLog("Object updated successfully: '\(name)' (ID: \(objectId))", component: "EditObjectView")
             onObjectUpdated()
             dismiss()
         } else {
             errorMessage = "Failed to update object. Please try again."
             showingError = true
-            LogManager.shared.addError("Failed to update object '\(name)' (ID: \(objectId))", component: "EditObjectView")
         }
     }
 
@@ -280,20 +262,15 @@ struct EditObjectView: View {
         guard let objectId = object["id"] as? String else {
             errorMessage = "Invalid object ID"
             showingError = true
-            LogManager.shared.addError("Cannot delete object: invalid object ID", component: "EditObjectView")
             return
         }
 
-        LogManager.shared.addLog("Attempting to delete object '\(name)' (ID: \(objectId))", component: "EditObjectView")
-
         if EntityObjectManager.shared.deleteObject(classId: entityClass.id, objectId: objectId) {
-            LogManager.shared.addLog("Object deleted successfully: '\(name)' (ID: \(objectId))", component: "EditObjectView")
             onObjectUpdated()
             dismiss()
         } else {
             errorMessage = "Failed to delete object. Please try again."
             showingError = true
-            LogManager.shared.addError("Failed to delete object '\(name)' (ID: \(objectId))", component: "EditObjectView")
         }
     }
 

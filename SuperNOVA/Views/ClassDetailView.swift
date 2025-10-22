@@ -19,6 +19,8 @@ struct ClassDetailView: View {
     @State private var properties: [PropertyModel] = []
     @State private var states: [StateModel] = []
     @State private var viewMode: ViewMode = .grid
+    @State private var selectedObjectForEdit: [String: Any]?
+    @State private var showingEditSheet = false
 
     let columns = [
         GridItem(.adaptive(minimum: 120, maximum: 150), spacing: 20)
@@ -51,7 +53,29 @@ struct ClassDetailView: View {
                     GridView(objects: objects, entityClass: entityClass, states: states, onObjectUpdated: loadData)
                 }
             } else {
-                TableView(objects: objects, properties: properties, states: states, classId: entityClass.id, entityClass: entityClass, onObjectUpdated: loadData)
+                TableView(
+                    objects: objects,
+                    properties: properties,
+                    states: states,
+                    classId: entityClass.id,
+                    entityClass: entityClass,
+                    onObjectUpdated: loadData,
+                    onObjectSelected: { object in
+                        selectedObjectForEdit = object
+                        showingEditSheet = true
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            if let object = selectedObjectForEdit {
+                NavigationStack {
+                    EditObjectView(entityClass: entityClass, object: object) {
+                        loadData()
+                    }
+                }
+            } else {
+                Text("Error: No object selected")
             }
         }
         .navigationTitle("")

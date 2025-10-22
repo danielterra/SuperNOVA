@@ -25,20 +25,20 @@ struct TableView: View {
     let classId: String
     let entityClass: EntityClassModel
     let onObjectUpdated: () -> Void
+    let onObjectSelected: ([String: Any]) -> Void
 
     @State private var selection = Set<String>()
-    @State private var selectedObject: [String: Any]?
-    @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @AppStorage private var columnCustomization: TableColumnCustomization<TableObjectRow>
 
-    init(objects: [[String: Any]], properties: [PropertyModel], states: [StateModel], classId: String, entityClass: EntityClassModel, onObjectUpdated: @escaping () -> Void) {
+    init(objects: [[String: Any]], properties: [PropertyModel], states: [StateModel], classId: String, entityClass: EntityClassModel, onObjectUpdated: @escaping () -> Void, onObjectSelected: @escaping ([String: Any]) -> Void) {
         self.objects = objects
         self.properties = properties
         self.states = states
         self.classId = classId
         self.entityClass = entityClass
         self.onObjectUpdated = onObjectUpdated
+        self.onObjectSelected = onObjectSelected
 
         // Use class-specific key for column customization
         let key = "tableColumnCustomization_\(classId)"
@@ -49,7 +49,6 @@ struct TableView: View {
             // Reset old customization to ensure checkbox is first with proper ordering
             UserDefaults.standard.removeObject(forKey: key)
             UserDefaults.standard.set(true, forKey: resetKey)
-            LogManager.shared.addLog("Reset column customization for class: \(classId)", component: "TableView")
         }
 
         self._columnCustomization = AppStorage(wrappedValue: TableColumnCustomization<TableObjectRow>(), key)
@@ -170,17 +169,6 @@ struct TableView: View {
             dynamicPropertyColumns
         }
             .tableColumnHeaders(.visible)
-            .onChange(of: columnCustomization) { oldValue, newValue in
-                LogManager.shared.addLog("📊 Column customization changed for class: \(classId)", component: "TableView")
-
-                // Try to log column order if accessible
-                if let data = try? JSONEncoder().encode(newValue),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    LogManager.shared.addLog("   Customization JSON: \(jsonString)", component: "TableView")
-                } else {
-                    LogManager.shared.addLog("   New customization: \(String(describing: newValue))", component: "TableView")
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     if !selection.isEmpty {
@@ -200,8 +188,7 @@ struct TableView: View {
                 if selectedIds.count == 1, let selectedId = selectedIds.first {
                     Button("Edit") {
                         if let object = objects.first(where: { $0["id"] as? String == selectedId }) {
-                            selectedObject = object
-                            showingEditSheet = true
+                            onObjectSelected(object)
                         }
                     }
                     Divider()
@@ -212,22 +199,7 @@ struct TableView: View {
                     showingDeleteAlert = true
                 }
             } primaryAction: { selectedIds in
-                // Double-click action
-                if selectedIds.count == 1, let selectedId = selectedIds.first {
-                    if let object = objects.first(where: { $0["id"] as? String == selectedId }) {
-                        selectedObject = object
-                        showingEditSheet = true
-                    }
-                }
-            }
-            .sheet(isPresented: $showingEditSheet) {
-                if let object = selectedObject {
-                    NavigationStack {
-                        EditObjectView(entityClass: entityClass, object: object) {
-                            onObjectUpdated()
-                        }
-                    }
-                }
+                handleDoubleClick(selectedIds: selectedIds)
             }
             .alert("Delete Objects", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) {}
@@ -240,35 +212,34 @@ struct TableView: View {
     }
 
     var body: some View {
-        if objects.isEmpty {
-            ContentUnavailableView(
-                "No Objects",
-                systemImage: "tray",
-                description: Text("Create your first object for this class")
-            )
-        } else {
-            tableContent
+        Group {
+            if objects.isEmpty {
+                ContentUnavailableView(
+                    "No Objects",
+                    systemImage: "tray",
+                    description: Text("Create your first object for this class")
+                )
+            } else {
+                tableContent
+            }
         }
     }
 
     private func deleteSelectedObjects() {
-        LogManager.shared.addLog("Deleting \(selection.count) selected objects from table view", component: "TableView")
-
-        var successCount = 0
         for objectId in selection {
-            if EntityObjectManager.shared.deleteObject(classId: classId, objectId: objectId) {
-                successCount += 1
-            }
-        }
-
-        if successCount == selection.count {
-            LogManager.shared.addLog("Successfully deleted \(successCount) objects from table view", component: "TableView")
-        } else {
-            LogManager.shared.addError("Deleted \(successCount) of \(selection.count) objects - some deletions failed", component: "TableView")
+            _ = EntityObjectManager.shared.deleteObject(classId: classId, objectId: objectId)
         }
 
         selection.removeAll()
         onObjectUpdated()
+    }
+
+    private func handleDoubleClick(selectedIds: Set<String>) {
+        if selectedIds.count == 1, let selectedId = selectedIds.first {
+            if let object = objects.first(where: { $0["id"] as? String == selectedId }) {
+                onObjectSelected(object)
+            }
+        }
     }
 
     private func stateColor(for type: StateType) -> Color {

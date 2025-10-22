@@ -56,24 +56,12 @@ class EntityObjectManager {
     }
 
     func getObject(classId: String, objectId: String) -> [String: Any]? {
-        LogManager.shared.addLog("Fetching object \(objectId) from class \(classId)", component: "EntityObject")
-
         let tableName = SQLTypeConverter.generateTableName(for: classId)
         let results = db.query("SELECT * FROM \(tableName) WHERE id = ?", parameters: [objectId])
-
-        if let object = results.first {
-            let name = object["name"] as? String ?? "Unknown"
-            LogManager.shared.addLog("Object found: '\(name)' (ID: \(objectId))", component: "EntityObject")
-            return object
-        } else {
-            LogManager.shared.addError("Object not found: \(objectId) in class \(classId)", component: "EntityObject")
-            return nil
-        }
+        return results.first
     }
 
     func getAllObjects(classId: String, whereClause: String? = nil, parameters: [Any?] = []) -> [[String: Any]] {
-        LogManager.shared.addLog("Fetching all objects from class \(classId)" + (whereClause != nil ? " with filter" : ""), component: "EntityObject")
-
         let tableName = SQLTypeConverter.generateTableName(for: classId)
         var sql = "SELECT * FROM \(tableName)"
 
@@ -81,10 +69,7 @@ class EntityObjectManager {
             sql += " WHERE \(whereClause)"
         }
 
-        let results = db.query(sql, parameters: parameters)
-        LogManager.shared.addLog("Retrieved \(results.count) objects from class \(classId)", component: "EntityObject")
-
-        return results
+        return db.query(sql, parameters: parameters)
     }
 
     func updateObject(
@@ -162,39 +147,22 @@ class EntityObjectManager {
     // MARK: - Query Helpers
 
     func queryObjects(classId: String, sql: String, parameters: [Any?] = []) -> [[String: Any]] {
-        LogManager.shared.addLog("Executing custom query on class \(classId)", component: "EntityObject")
-
         let tableName = SQLTypeConverter.generateTableName(for: classId)
         let fullSql = sql.replacingOccurrences(of: "{table}", with: tableName)
-        let results = db.query(fullSql, parameters: parameters)
-
-        LogManager.shared.addLog("Custom query returned \(results.count) results", component: "EntityObject")
-        return results
+        return db.query(fullSql, parameters: parameters)
     }
 
     func executeRawSQL(_ sql: String, parameters: [Any?] = []) -> [[String: Any]] {
-        LogManager.shared.addLog("Executing raw SQL query", component: "EntityObject")
-
-        let results = db.query(sql, parameters: parameters)
-
-        LogManager.shared.addLog("Raw SQL query returned \(results.count) results", component: "EntityObject")
-        return results
+        return db.query(sql, parameters: parameters)
     }
 
     // MARK: - Advanced Queries
 
     func getObjectsByState(classId: String, stateId: String) -> [[String: Any]] {
-        LogManager.shared.addLog("Fetching objects by state \(stateId) from class \(classId)", component: "EntityObject")
-
-        let results = getAllObjects(classId: classId, whereClause: "current_state_id = ?", parameters: [stateId])
-
-        LogManager.shared.addLog("Found \(results.count) objects in state \(stateId)", component: "EntityObject")
-        return results
+        return getAllObjects(classId: classId, whereClause: "current_state_id = ?", parameters: [stateId])
     }
 
     func countObjects(classId: String, whereClause: String? = nil, parameters: [Any?] = []) -> Int {
-        LogManager.shared.addLog("Counting objects in class \(classId)" + (whereClause != nil ? " with filter" : ""), component: "EntityObject")
-
         let tableName = SQLTypeConverter.generateTableName(for: classId)
         var sql = "SELECT COUNT(*) as count FROM \(tableName)"
 
@@ -204,11 +172,9 @@ class EntityObjectManager {
 
         let results = db.query(sql, parameters: parameters)
         if let first = results.first, let count = first["count"] as? Int {
-            LogManager.shared.addLog("Object count for class \(classId): \(count)", component: "EntityObject")
             return count
         }
 
-        LogManager.shared.addError("Failed to count objects in class \(classId)", component: "EntityObject")
         return 0
     }
 
@@ -218,8 +184,6 @@ class EntityObjectManager {
         searchTerm: String,
         matchType: SearchMatchType = .contains
     ) -> [[String: Any]] {
-        LogManager.shared.addLog("Searching objects in class \(classId) by \(propertyName) for '\(searchTerm)' (type: \(matchType))", component: "EntityObject")
-
         let sanitizedName = SQLTypeConverter.sanitizeColumnName(propertyName)
         let whereClause: String
         let searchValue: String
@@ -239,10 +203,7 @@ class EntityObjectManager {
             searchValue = "%\(searchTerm)"
         }
 
-        let results = getAllObjects(classId: classId, whereClause: whereClause, parameters: [searchValue])
-
-        LogManager.shared.addLog("Search returned \(results.count) objects matching '\(searchTerm)'", component: "EntityObject")
-        return results
+        return getAllObjects(classId: classId, whereClause: whereClause, parameters: [searchValue])
     }
 }
 

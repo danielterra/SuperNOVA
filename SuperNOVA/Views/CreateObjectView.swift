@@ -129,27 +129,19 @@ struct CreateObjectView: View {
     }
 
     private func loadData() {
-        LogManager.shared.addLog("Loading data for creating new \(entityClass.name)", component: "CreateObjectView")
-
         properties = EntityClassManager.shared.getProperties(for: entityClass.id)
         states = EntityClassManager.shared.getStates(for: entityClass.id)
-
-        LogManager.shared.addLog("Loaded \(properties.count) properties and \(states.count) states", component: "CreateObjectView")
 
         // Set first state as default
         if let firstState = states.first {
             selectedStateId = firstState.id
-            LogManager.shared.addLog("Default state set to '\(firstState.name)'", component: "CreateObjectView")
         }
     }
 
     private func createObject() {
         guard isValid else {
-            LogManager.shared.addError("Cannot create object: validation failed", component: "CreateObjectView")
             return
         }
-
-        LogManager.shared.addLog("Attempting to create new \(entityClass.name) object '\(name)'", component: "CreateObjectView")
 
         // Validate required properties
         for property in properties where property.isRequired {
@@ -157,7 +149,6 @@ struct CreateObjectView: View {
             if value.isEmpty {
                 errorMessage = "Property '\(property.name)' is required."
                 showingError = true
-                LogManager.shared.addError("Validation failed: required property '\(property.name)' is empty", component: "CreateObjectView")
                 return
             }
         }
@@ -183,25 +174,21 @@ struct CreateObjectView: View {
             }
         }
 
-        LogManager.shared.addLog("Converted \(convertedValues.count) property values", component: "CreateObjectView")
-
         // Use class icon if no custom icon set
         let finalIcon = icon.isEmpty ? entityClass.icon : icon
 
-        if let objectId = EntityObjectManager.shared.createObject(
+        if EntityObjectManager.shared.createObject(
             classId: entityClass.id,
             name: name,
             icon: finalIcon,
             stateId: selectedStateId,
             propertyValues: convertedValues
-        ) {
-            LogManager.shared.addLog("Object created successfully with ID: \(objectId)", component: "CreateObjectView")
+        ) != nil {
             onObjectCreated()
             dismiss()
         } else {
             errorMessage = "Failed to create object. Please try again."
             showingError = true
-            LogManager.shared.addError("Failed to create object '\(name)'", component: "CreateObjectView")
         }
     }
 

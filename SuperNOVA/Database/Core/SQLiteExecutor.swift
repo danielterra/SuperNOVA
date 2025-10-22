@@ -17,13 +17,23 @@ class SQLiteExecutor {
 
     @discardableResult
     func execute(_ sql: String, parameters: [Any?] = []) -> Bool {
-        LogManager.shared.addLog("Executing SQL statement with \(parameters.count) parameters", component: "SQLiteExecutor")
+        // Log complete SQL with parameters
+        let parametersStr = parameters.map { param in
+            if let value = param {
+                return "\(value)"
+            }
+            return "NULL"
+        }.joined(separator: ", ")
+
+        LogManager.shared.addLog("📝 SQL EXECUTE: \(sql)", component: "SQLiteExecutor")
+        if !parameters.isEmpty {
+            LogManager.shared.addLog("   Parameters: [\(parametersStr)]", component: "SQLiteExecutor")
+        }
 
         var statement: OpaquePointer?
 
         guard sqlite3_prepare_v2(connection.db, sql, -1, &statement, nil) == SQLITE_OK else {
             LogManager.shared.addError("SQL Error preparing statement: \(connection.errorMessage())", component: "SQLiteExecutor")
-            LogManager.shared.addError("SQL: \(sql)", component: "SQLiteExecutor")
             return false
         }
 
@@ -34,23 +44,32 @@ class SQLiteExecutor {
 
         if result != SQLITE_DONE && result != SQLITE_ROW {
             LogManager.shared.addError("SQL Error executing statement: \(connection.errorMessage())", component: "SQLiteExecutor")
-            LogManager.shared.addError("SQL: \(sql)", component: "SQLiteExecutor")
             return false
         }
 
-        LogManager.shared.addLog("SQL statement executed successfully", component: "SQLiteExecutor")
+        LogManager.shared.addLog("✅ SQL execution successful", component: "SQLiteExecutor")
         return true
     }
 
     func query(_ sql: String, parameters: [Any?] = []) -> [[String: Any]] {
-        LogManager.shared.addLog("Executing SQL query with \(parameters.count) parameters", component: "SQLiteExecutor")
+        // Log complete SQL with parameters
+        let parametersStr = parameters.map { param in
+            if let value = param {
+                return "\(value)"
+            }
+            return "NULL"
+        }.joined(separator: ", ")
+
+        LogManager.shared.addLog("🔍 SQL QUERY: \(sql)", component: "SQLiteExecutor")
+        if !parameters.isEmpty {
+            LogManager.shared.addLog("   Parameters: [\(parametersStr)]", component: "SQLiteExecutor")
+        }
 
         var statement: OpaquePointer?
         var results: [[String: Any]] = []
 
         guard sqlite3_prepare_v2(connection.db, sql, -1, &statement, nil) == SQLITE_OK else {
             LogManager.shared.addError("SQL Error preparing query: \(connection.errorMessage())", component: "SQLiteExecutor")
-            LogManager.shared.addError("SQL: \(sql)", component: "SQLiteExecutor")
             return []
         }
 
@@ -63,7 +82,7 @@ class SQLiteExecutor {
 
         sqlite3_finalize(statement)
 
-        LogManager.shared.addLog("SQL query returned \(results.count) rows", component: "SQLiteExecutor")
+        LogManager.shared.addLog("✅ Query returned \(results.count) row\(results.count == 1 ? "" : "s")", component: "SQLiteExecutor")
         return results
     }
 
