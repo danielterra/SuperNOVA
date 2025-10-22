@@ -19,6 +19,7 @@ struct EditClassView: View {
     @State private var description: String
     @State private var states: [StateItem] = []
     @State private var properties: [PropertyItem] = []
+    @State private var originalPropertyIds: Set<String> = []
     @State private var availableClasses: [EntityClassModel] = []
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -133,6 +134,9 @@ struct EditClassView: View {
             )
         }
 
+        // Store original property IDs to detect deletions
+        originalPropertyIds = Set(existingProperties.map { $0.id })
+
         availableClasses = EntityClassManager.shared.getAllEntityClasses()
 
         LogManager.shared.addLog("Loaded \(states.count) states, \(properties.count) properties, and \(availableClasses.count) available classes", component: "EditClassView")
@@ -200,6 +204,18 @@ struct EditClassView: View {
                     referenceTargetClassId: property.referenceTargetClassId
                 )
                 _ = EntityClassManager.shared.updatePropertyOrder(propertyId: property.id, newOrder: index)
+            }
+
+            // Delete removed properties
+            let currentPropertyIds = Set(properties.filter { !$0.id.isEmpty }.map { $0.id })
+            let deletedPropertyIds = originalPropertyIds.subtracting(currentPropertyIds)
+            for propertyId in deletedPropertyIds {
+                let deleted = EntityClassManager.shared.deleteProperty(id: propertyId)
+                if deleted {
+                    LogManager.shared.addLog("Deleted property with ID: \(propertyId)", component: "EditClassView")
+                } else {
+                    LogManager.shared.addError("Failed to delete property with ID: \(propertyId)", component: "EditClassView")
+                }
             }
 
             if let updatedClass = EntityClassManager.shared.getEntityClass(id: entityClass.id) {
