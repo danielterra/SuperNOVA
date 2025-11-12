@@ -2,7 +2,54 @@
 
 ### Objective
 
-SuperNOVA aims to reinvent how people create and organize knowledge. Inspired by Excel’s simplicity, it goes further: allowing anyone to create complete, automated, and decentralized systems without relying on servers or technical expertise.
+SuperNOVA aims to reinvent how people create, organize, and automate knowledge. Inspired by Excel's simplicity, it goes further: allowing anyone to build complete systems, explore and visualize data, find answers through intelligent queries, and orchestrate automated workflows — all without relying on servers or technical expertise.
+
+---
+
+### Why This Project Exists
+
+**The Spreadsheet Paradox**
+
+Spreadsheets are the most popular software in the world. An estimated 1+ billion people use Excel alone[^1], with over 100 million professionals listing it as a core skill[^2]. Businesses of all sizes — from small startups to Fortune 500 companies — depend on spreadsheets for critical operations: 72% of enterprises use them for financial modeling and business intelligence[^3], and over 90% of administrative and managerial jobs require spreadsheet proficiency[^4].
+
+Yet spreadsheets have fundamental limits that make them fragile and difficult to scale:
+
+- **Weak data relationships**: No proper foreign keys, no referential integrity — relationships are just cell references that break when rows move or sheets are reorganized
+- **No reactive automation**: Changes don't trigger workflows; there's no event system to automate responses when data changes
+- **No validation or constraints**: Anyone can type anything anywhere; there's no way to enforce data types, required fields, or business rules
+- **Manual and error-prone**: Copy-paste operations, formula mistakes, and accidental deletions happen constantly with no safeguards
+- **Limited scalability**: Performance degrades severely with size; hitting row/column limits breaks critical systems
+- **No proper querying**: You can't ask complex questions across multiple sheets or perform relational queries without building elaborate, brittle formulas
+- **Flat structure**: Everything lives in rows and columns; you can't model hierarchies, graphs, or complex entity relationships naturally
+
+**And when they fail, the consequences are serious:** JP Morgan Chase lost $6.2 billion due to a copy-paste error in a risk model[^5]. TransAlta Corp lost $24 million when misaligned rows caused bids to match wrong contracts[^6]. Fidelity Investments made a $2.6 billion accounting error from a missing minus sign[^7]. During the COVID-19 pandemic, Public Health England lost track of 15,841 positive cases because Excel hit its row limit[^8]. Studies show that 88% of all spreadsheets contain serious errors[^9] — yet businesses have no better alternative for the flexibility they need.
+
+[^5]: [JPMorgan "London Whale" Excel error - Dear Analyst](https://www.thekeycuts.com/dear-analyst-38-breaking-down-an-excel-error-that-led-to-six-billion-loss-at-jpmorgan-chase/)
+[^6]: [TransAlta $24M loss - Excel Disasters](https://sheetcast.com/articles/ten-memorable-excel-disasters)
+[^7]: [Fidelity $2.6B error - Biggest Excel Mistakes](https://blog.hurree.co/8-of-the-biggest-excel-mistakes-of-all-time)
+[^8]: [COVID-19 data loss - Spreadsheet Disasters](https://gridfox.com/blog/5-spreadsheet-disasters-that-prove-their-risk/)
+[^9]: [88% error rate - Wall of Shame for Excel Errors](https://www.solving-finance.com/post/the-wall-of-shame-for-the-worst-excel-errors)
+
+[^1]: [Senacea - How many people use Excel?](https://www.senacea.co.uk/post/excel-users-how-many)
+[^2]: [LinkedIn profiles analysis - Excel as listed skill](https://www.senacea.co.uk/post/excel-users-how-many)
+[^3]: [Global office software market research - Grand View Research](https://www.grandviewresearch.com/industry-analysis/office-software-market-report)
+[^4]: [U.S. Bureau of Labor Statistics - Spreadsheet proficiency requirements](https://www.excel4business.com/resources/research-into-excel-use.php)
+
+**The Fragmentation Problem**
+
+Today, our data lives scattered across hundreds of applications and services. Your contacts are in one place, your projects in another, your finances elsewhere. Each silo has its own interface, its own rules, its own way of doing things. Moving data between them is painful or impossible. You can't create your own connections, your own automations, your own view of how everything relates.
+
+**You Don't Own Your Data**
+
+Most applications store your data on their servers. You access it through their interface, under their terms. If they change their pricing, shut down, or decide to restrict features, you're stuck. Your data — your knowledge, your work, your life — is held hostage by business models you can't control.
+
+**Wasted Computing Power**
+
+Modern personal computers are extraordinarily powerful — multi-core processors, gigabytes of RAM, terabytes of storage. Yet we use them mostly as dumb terminals to access cloud services. All that computing power sits idle while we wait for distant servers to process our requests, subject to their limitations and costs.
+
+**SuperNOVA's Answer**
+
+SuperNOVA brings the power back to your machine. It combines the simplicity of spreadsheets with the sophistication of databases, the automation of modern systems, and the freedom of complete data ownership. Everything runs locally. Everything connects. Everything reacts. Your computer becomes a powerful, autonomous system that works *for you* — not for a service provider's business model.
 
 ---
 
@@ -15,7 +62,7 @@ SuperNOVA transforms static data into living information. Every change in an ent
 ### Principles and Strategies
 
 1. **Simplicity as Power**
-   SuperNOVA must be as intuitive as a spreadsheet. Modeling entities, states, and actions should be visual and natural. AI acts as a modeling assistant, helping users build structures and automations without writing code.
+   SuperNOVA must be as intuitive as a spreadsheet. AI acts as an assistant, helping users build structures and automations without writing code.
 
 2. **Decentralization and Autonomy**
    Everything runs on the users’ own devices. Each machine is an independent, collaborative node capable of sharing load and data. There are no central servers — computing power and control belong to the users.
