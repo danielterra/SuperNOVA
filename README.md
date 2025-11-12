@@ -2,7 +2,11 @@
 
 ### Objective
 
-SuperNOVA aims to reinvent how people create, organize, and automate knowledge. Inspired by Excel's simplicity, it goes further: allowing anyone to build complete systems, explore and visualize data, find answers through intelligent queries, and orchestrate automated workflows — all without relying on servers or technical expertise.
+SuperNOVA aims to reinvent how people create and organize knowledge by making their data reactive, connected, structured, and truly their own. Inspired by Excel's simplicity, it goes further: allowing anyone to build complete systems with strong data relationships organized around a common, extensible ontology.
+
+This shared semantic foundation serves two crucial purposes: it enables true interoperability — data created in one SuperNOVA instance can be understood and used by any other — and it provides a simple abstraction layer that both humans and AI can work with naturally. Instead of AI generating code from requirements, it collaborates directly with you by modeling entities, relationships, and automations in the same structured way you do.
+
+You can explore and visualize your data to find answers efficiently, and orchestrate automated workflows that respond to every change — all running locally on your machine, with complete ownership and control, without servers or technical expertise.
 
 ---
 
